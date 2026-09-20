@@ -3,6 +3,7 @@
   "name": "watermelon",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
+  "routes": [{ "pattern": "watermelon.shashwatchavan.com", "custom_domain": true }],
   "observability": { "enabled": true },
   "assets": {
     "directory": "./public",
