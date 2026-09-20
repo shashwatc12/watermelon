@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Program Health Console</title>
+<meta name="description" content="Paste a weekly program status update. Jev returns red/yellow/green, blocked, slipped, escalate and dominant risk, with probabilities.">
+<style>
+  :root {
+    --bg: #f7f6f2; --panel: #fff; --ink: #1b1b18; --muted: #6b6a63; --line: #e2e0d8;
+    --green: #2f7d4f; --yellow: #b7791f; --red: #c0392b; --accent: #23408e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141412; --panel: #1d1d1a; --ink: #eeede6; --muted: #a09f96; --line: #33322d;
+      --green: #58b47c; --yellow: #e0a84a; --red: #ee6b5c; --accent: #8fa8f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  textarea { width: 100%; min-height: 170px; resize: vertical; padding: 12px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  button { font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+    color: var(--ink); padding: 8px 12px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .55; cursor: wait; }
+  .grow { flex: 1; }
+  .count { color: var(--muted); font-size: 13px; }
+  #out { margin-top: 20px; }
+  .health { display: flex; align-items: center; gap: 14px; }
+  .dot { width: 44px; height: 44px; border-radius: 50%; flex: none; }
+  .health h2 { margin: 0; font-size: 22px; text-transform: capitalize; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+  .cell { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .cell b { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .cell span { font-size: 18px; font-weight: 600; }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); margin: 6px 0 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .prob { font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
+  .meta { margin-top: 16px; color: var(--muted); font-size: 13px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--yellow); color: #fff; font-size: 12px; }
+  .err { color: var(--red); margin-top: 12px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Program Health Console</h1>
+  <p class="sub">Paste a weekly status update. <a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> makes five typed decisions on it in one call.</p>
+
+  <div class="panel">
+    <textarea id="state" maxlength="4000" placeholder="Paste a weekly status update, or pick a sample below."></textarea>
+    <div class="row">
+      <button class="primary" id="go">Assess</button>
+      <span class="count" id="count">0 / 4000</span>
+      <span class="grow"></span>
+      <span class="count">Samples (synthetic):</span>
+      <span id="samples"></span>
+    </div>
+    <div class="err" id="err" hidden></div>
+  </div>
+
+  <div id="out"></div>
+
+  <footer>Samples are invented. Do not paste confidential updates: text is sent to a third-party model API. Source on GitHub.</footer>
+</main>
+
+<script>
+const SAMPLES = {
+  "On track": "Week 12: Checkout redesign is on track for the Oct 14 launch. QA signed off on payments and accessibility. No open blockers. Design and eng are aligned on the final copy. Next week: staged rollout to 5% of traffic.",
+  "Dependency": "Week 9: Search migration is waiting on the platform team to finish the new index cluster. They committed to Sept 30 but have not confirmed capacity. We can start integration tests in parallel, but the cutover date of Oct 21 is at risk if the cluster slips again.",
+  "Slipping": "Week 15: We missed the beta milestone. Two engineers were pulled onto the outage response and the API latency regression is still unresolved. Launch will move from Nov 3 to late Nov at best. Need a decision on whether to cut the reporting module or add contractors.",
+  "Scope": "Week 6: Sales asked for SSO and audit logs in v1, which were not in the original requirements. Product and legal disagree on who owns the audit spec. Engineering estimates this adds five weeks. Nobody has decided whether the date or the scope moves."
+};
+
+const $ = (id) => document.getElementById(id);
+const ta = $("state");
+ta.addEventListener("input", () => $("count").textContent = ta.value.length + " / 4000");
+for (const [name, text] of Object.entries(SAMPLES)) {
+  const b = document.createElement("button");
+  b.textContent = name;
+  b.onclick = () => { ta.value = text; ta.dispatchEvent(new Event("input")); };
+  $("samples").appendChild(b);
+}
+
+const COLORS = { green: "var(--green)", yellow: "var(--yellow)", red: "var(--red)" };
+const pct = (n) => Math.round(n * 100) + "%";
+const yn = (v) => (v >= 0.5 ? "Yes" : "No");
+
+function probBars(a) {
+  return Object.entries(a.probabilities || {})
+    .sort((x, y) => y[1] - x[1])
+    .map(([k, v]) => `<div class="prob"><span>${k}</span><span>${pct(v)}</span></div>
+      <div class="bar"><i style="width:${pct(v)}"></i></div>`).join("");
+}
+
+function render(r) {
+  const a = r.answers, h = a.health, m = r.meta;
+  const cell = (label, val, extra = "") => `<div class="cell"><b>${label}</b><span>${val}</span>${extra}</div>`;
+  const noul = (label, q) => cell(label, yn(q.noul), `<div class="prob"><span>confidence</span><span>${pct(q.noul >= 0.5 ? q.noul : 1 - q.noul)}</span></div>`);
+  $("out").innerHTML = `<div class="panel">
+    <div class="health"><div class="dot" style="background:${COLORS[h.choice] || "var(--muted)"}"></div>
+      <div><div class="count">Program health</div><h2>${h.choice}</h2></div></div>
+    <div style="margin-top:12px">${probBars(h)}</div>
+    <div class="grid">
+      ${noul("Blocked", a.blocked)}
+      ${noul("Date slipped", a.slipped)}
+      ${noul("Escalate", a.escalate)}
+      ${cell("Dominant risk", a.risk.choice, probBars(a.risk))}
+    </div>
+    <div class="meta">${m.latencyMs} ms round trip · $${m.costUsd.toFixed(6)} · ${r.usage.input_tokens} input tokens
+      ${m.mock ? ' · <span class="badge">mock mode: no Jev call</span>' : ""}</div>
+  </div>`;
+}
+
+$("go").onclick = async () => {
+  $("err").hidden = true;
+  const state = ta.value.trim();
+  if (!state) { $("err").textContent = "Paste an update or pick a sample."; $("err").hidden = false; return; }
+  $("go").disabled = true; $("go").textContent = "Assessing…";
+  try {
+    const res = await fetch("/api/assess", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Request failed");
+    render(data);
+  } catch (e) {
+    $("err").textContent = e.message; $("err").hidden = false;
+  } finally {
+    $("go").disabled = false; $("go").textContent = "Assess";
+  }
+};
+</script>
+</body>
+</html>

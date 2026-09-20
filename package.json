@@ -1,0 +1,13 @@
+{
+  "name": "program-health-console",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "bench": "node scripts/bench.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}
