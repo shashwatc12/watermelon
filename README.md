@@ -31,20 +31,23 @@ browser ──POST /api/assess──▶ Cloudflare Worker
 - **No database, no accounts.** Stateless Worker. The API key exists only as a Worker secret; upstream error bodies are never forwarded.
 - **Runs without a key.** With no `TYPESAFE_API_KEY` the Worker uses a keyword stand-in and the UI shows a "mock mode" badge, so a clone works immediately. Mock numbers are never used in the report.
 
-## Results (30 synthetic updates, real Jev `jev-1.13.0`)
+## Results (real Jev `jev-1.13.0`)
 
-Labels were written from scenario facts *before* the text was rendered, never from the wording. Full method and tables: [evals/REPORT.md](evals/REPORT.md).
+Labels were written from scenario facts *before* the text was rendered, never from the wording. The 20-example held-out set was written after the policy was fixed and never used to tune it. Full method and tables: [evals/REPORT.md](evals/REPORT.md), [evals/REPORT.holdout.md](evals/REPORT.holdout.md).
 
-| Metric | Result |
-|---|---|
-| Watermelons caught (claimed status lower than the facts) | **7 / 8** |
-| False watermelon alarms on honest updates | **0 / 20** |
-| "Trust the claimed label" baseline | 0 / 8 by construction |
-| Health accuracy: Jev alone → Jev + code rules | 71% → 79% |
-| Latency p50 / p95 (one call, six questions) | 141 ms / 283 ms |
-| Cost per 1,000 updates | $0.027 |
+| Metric | Tuning set (30) | Held-out (20) |
+|---|---|---|
+| Watermelons caught (claimed status lower than the facts) | **7 / 8** | **4 / 5** |
+| False watermelon alarms on honest updates | **0 / 20** | **0 / 14** |
+| "Trust the claimed label" baseline | 0 / 8 | 0 / 5 |
+| Health accuracy: Jev + code rules (Jev alone on tuning set: 71%) | 79% | 74% |
+| Escalation recall at the 0.2 policy threshold | 91% | 71% |
+| Latency p50 / p95 (one call, six questions) | 141 / 283 ms | 154 / 308 ms |
+| Cost per 1,000 updates | $0.027 | $0.027 |
 
 Six extra probes of Jev's documented weak spots (date arithmetic, double negative, prompt injection, numbers-only prose, terse red, good news in a bad tone) all came out right ([evals/failure-modes.json](evals/failure-modes.json)). Six probes is a smoke test, not a proof.
+
+Threshold reasoning and the full sweep: [docs/THRESHOLDS.md](docs/THRESHOLDS.md).
 
 ## What I learned about Jev
 
@@ -56,8 +59,8 @@ Six extra probes of Jev's documented weak spots (date arithmetic, double negativ
 
 ## Limits (read these)
 
-- 30 examples, all synthetic, all written by the author. This is a sanity check, not a benchmark.
-- The escalation threshold was tuned on the same 30 examples, so its precision and recall are optimistic. A held-out set is the first thing to add.
+- 50 examples in total, all synthetic, all written by the author. This is a sanity check, not a benchmark.
+- The escalation threshold was tuned on the first 30. On the held-out 20, recall at that threshold dropped from 91% to 71%, so treat 0.2 as a starting point.
 - Thin updates are a weak spot: on the two deliberately empty updates ("Nothing new this week"), Jev did not answer `unclear` and neither was routed to a human (0/2). The `unclear` exit exists in the design but did not fire here.
 - Text only, English only. It judges the wording of an update, not the truth of the program.
 - Jev alone is not the whole product: the 71% → 79% lift comes from code rules. That is a design choice, and a stated one.
@@ -78,4 +81,4 @@ Deploy: `npx wrangler deploy`, then `npx wrangler secret put TYPESAFE_API_KEY` (
 
 ## Next
 
-Held-out eval and re-tuned threshold · a previous-update field so slippage is measured as a delta · head-to-head against a frontier LLM on cost and latency · a CLI / GitHub Action so it runs where updates already live.
+Re-tuned threshold on real reviewer feedback · a previous-update field so slippage is measured as a delta · head-to-head against LLMs on cost and latency (`evals/compare.mjs`, needs a Groq key) · a CLI / GitHub Action so it runs where updates already live.

@@ -1,0 +1,1707 @@
+{
+  "summary": {
+    "model": "jev-1.13.0",
+    "mock": false,
+    "n": 20,
+    "policy": {
+      "escalateAt": 0.2,
+      "reviewAt": 0.1,
+      "yellowAfterDays": 7,
+      "redAfterDays": 21
+    },
+    "health": {
+      "rawAcc": 0.7368421052631579,
+      "finalAcc": 0.7368421052631579,
+      "n": 19,
+      "confusion": {
+        "green->green": 4,
+        "green->yellow": 1,
+        "red->red": 4,
+        "red->yellow": 4,
+        "yellow->yellow": 6
+      }
+    },
+    "unclearRoutedToHuman": "0/1",
+    "watermelon": {
+      "caught": 4,
+      "total": 5,
+      "falseAlarms": 0,
+      "honestTotal": 14
+    },
+    "escalation": {
+      "missCost": 10,
+      "falseCost": 1,
+      "best": {
+        "threshold": 0.1,
+        "tp": 7,
+        "fp": 11,
+        "fn": 0,
+        "tn": 2,
+        "precision": 0.3888888888888889,
+        "recall": 1,
+        "cost": 11
+      },
+      "sweep": [
+        {
+          "threshold": 0.1,
+          "tp": 7,
+          "fp": 11,
+          "fn": 0,
+          "tn": 2,
+          "precision": 0.3888888888888889,
+          "recall": 1,
+          "cost": 11
+        },
+        {
+          "threshold": 0.2,
+          "tp": 5,
+          "fp": 5,
+          "fn": 2,
+          "tn": 8,
+          "precision": 0.5,
+          "recall": 0.7142857142857143,
+          "cost": 25
+        },
+        {
+          "threshold": 0.3,
+          "tp": 5,
+          "fp": 0,
+          "fn": 2,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.7142857142857143,
+          "cost": 20
+        },
+        {
+          "threshold": 0.4,
+          "tp": 5,
+          "fp": 0,
+          "fn": 2,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.7142857142857143,
+          "cost": 20
+        },
+        {
+          "threshold": 0.5,
+          "tp": 4,
+          "fp": 0,
+          "fn": 3,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.5714285714285714,
+          "cost": 30
+        },
+        {
+          "threshold": 0.6,
+          "tp": 4,
+          "fp": 0,
+          "fn": 3,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.5714285714285714,
+          "cost": 30
+        },
+        {
+          "threshold": 0.7,
+          "tp": 4,
+          "fp": 0,
+          "fn": 3,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.5714285714285714,
+          "cost": 30
+        },
+        {
+          "threshold": 0.8,
+          "tp": 3,
+          "fp": 0,
+          "fn": 4,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.42857142857142855,
+          "cost": 40
+        },
+        {
+          "threshold": 0.9,
+          "tp": 3,
+          "fp": 0,
+          "fn": 4,
+          "tn": 13,
+          "precision": 1,
+          "recall": 0.42857142857142855,
+          "cost": 40
+        }
+      ]
+    },
+    "calibration": [
+      {
+        "range": "0.0-0.2",
+        "n": 20,
+        "meanP": 0.10500000000000001,
+        "observed": 0.1
+      },
+      {
+        "range": "0.2-0.4",
+        "n": 10,
+        "meanP": 0.29100000000000004,
+        "observed": 0
+      },
+      {
+        "range": "0.4-0.6",
+        "n": 2,
+        "meanP": 0.475,
+        "observed": 0.5
+      },
+      {
+        "range": "0.6-0.8",
+        "n": 1,
+        "meanP": 0.78,
+        "observed": 1
+      },
+      {
+        "range": "0.8-1.0",
+        "n": 7,
+        "meanP": 0.9314285714285714,
+        "observed": 0.8571428571428571
+      }
+    ],
+    "blockedAcc": 0.95,
+    "riskAcc": 0.9,
+    "spin": {
+      "meanOnWatermelons": 0.8480000000000001,
+      "meanOnHonest": 0.5692857142857143
+    },
+    "latency": {
+      "p50": 154,
+      "p95": 308,
+      "max": 308
+    },
+    "cost": {
+      "perUpdateUsd": 0.000027258000000000002,
+      "per1000Usd": 0.027258
+    }
+  },
+  "rows": [
+    {
+      "id": "h1",
+      "gold": {
+        "health": "green",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "green",
+          "confidence": 0.95,
+          "probabilities": {
+            "red": 0,
+            "yellow": 0.02,
+            "green": 0.96,
+            "unclear": 0.02
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.04
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "spin": {
+          "type": "score",
+          "score": 1.24,
+          "confidence": 0,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.26,
+            "1": 0.24,
+            "2": 0.5
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "none",
+          "confidence": 0.99,
+          "probabilities": {
+            "technical": 0,
+            "scope": 0,
+            "resourcing": 0,
+            "schedule": 0.01,
+            "none": 0.99
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "green",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "no_action"
+      },
+      "latencyMs": 308,
+      "costUsd": 0.000026880000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "h2",
+      "gold": {
+        "health": "green",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "green",
+          "confidence": 1,
+          "probabilities": {
+            "red": 0,
+            "unclear": 0,
+            "green": 1,
+            "yellow": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.29,
+          "confidence": 0.57,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.84,
+            "1": 0.04,
+            "2": 0.12
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "none",
+          "confidence": 0.99,
+          "probabilities": {
+            "schedule": 0.01,
+            "technical": 0,
+            "resourcing": 0,
+            "none": 0.99,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "green",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 295,
+      "costUsd": 0.000027048000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "h3",
+      "gold": {
+        "health": "green",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "green",
+          "confidence": 0.96,
+          "probabilities": {
+            "yellow": 0.01,
+            "unclear": 0.02,
+            "red": 0,
+            "green": 0.97
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.04
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "spin": {
+          "type": "score",
+          "score": 1.25,
+          "confidence": 0,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.33,
+            "1": 0.09,
+            "2": 0.58
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "none",
+          "confidence": 0.99,
+          "probabilities": {
+            "technical": 0.01,
+            "schedule": 0,
+            "none": 0.99,
+            "scope": 0,
+            "resourcing": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "green",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 276,
+      "costUsd": 0.000027300000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "h4",
+      "gold": {
+        "health": "green",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "green",
+          "confidence": 0.89,
+          "probabilities": {
+            "yellow": 0.09,
+            "green": 0.91,
+            "red": 0,
+            "unclear": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.04
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.84,
+          "confidence": 0.32,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.31,
+            "1": 0.54,
+            "2": 0.15
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "none",
+          "confidence": 0.45,
+          "probabilities": {
+            "technical": 0,
+            "none": 0.56,
+            "resourcing": 0.43,
+            "scope": 0,
+            "schedule": 0.01
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "green",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "no_action"
+      },
+      "latencyMs": 237,
+      "costUsd": 0.000027174000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "ho1",
+      "gold": {
+        "health": "green",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "red",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.9,
+          "probabilities": {
+            "unclear": 0,
+            "green": 0.05,
+            "yellow": 0.92,
+            "red": 0.03
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.19
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.73,
+          "confidence": 0.37,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.35,
+            "1": 0.58,
+            "2": 0.07
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "technical",
+          "confidence": 0.99,
+          "probabilities": {
+            "scope": 0,
+            "technical": 0.99,
+            "none": 0,
+            "schedule": 0.01,
+            "resourcing": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "red",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": -1,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 122,
+      "costUsd": 0.000027300000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hr1",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": true,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "red",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "red",
+          "confidence": 1,
+          "probabilities": {
+            "red": 1,
+            "yellow": 0,
+            "green": 0,
+            "unclear": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.98
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.97
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.96
+        },
+        "spin": {
+          "type": "score",
+          "score": 0,
+          "confidence": 1,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 1,
+            "1": 0,
+            "2": 0
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "schedule",
+          "confidence": 1,
+          "probabilities": {
+            "technical": 0,
+            "schedule": 1,
+            "scope": 0,
+            "none": 0,
+            "resourcing": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "red",
+        "actual": "red",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 130,
+      "costUsd": 0.000027636000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hr2",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": false,
+        "risk": "technical"
+      },
+      "facts": {
+        "claimed": "red",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "red",
+          "confidence": 0.99,
+          "probabilities": {
+            "green": 0,
+            "unclear": 0,
+            "yellow": 0.01,
+            "red": 0.99
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.34
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.4
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.01,
+          "confidence": 0.98,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.99,
+            "1": 0.01,
+            "2": 0
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "technical",
+          "confidence": 1,
+          "probabilities": {
+            "technical": 1,
+            "resourcing": 0,
+            "none": 0,
+            "schedule": 0,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "red",
+        "actual": "red",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 90,
+      "costUsd": 0.000027720000000000002,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hr3",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": false,
+        "risk": "resourcing"
+      },
+      "facts": {
+        "claimed": "red",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "red",
+          "confidence": 1,
+          "probabilities": {
+            "red": 1,
+            "unclear": 0,
+            "green": 0,
+            "yellow": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.9
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.94
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.92
+        },
+        "spin": {
+          "type": "score",
+          "score": 0,
+          "confidence": 1,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 1,
+            "1": 0,
+            "2": 0
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "resourcing",
+          "confidence": 1,
+          "probabilities": {
+            "schedule": 0,
+            "technical": 0,
+            "resourcing": 1,
+            "none": 0,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "red",
+        "actual": "red",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 159,
+      "costUsd": 0.000027468000000000002,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hr4",
+      "gold": {
+        "health": "red",
+        "escalate": false,
+        "blocked": false,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "red",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.62,
+          "probabilities": {
+            "red": 0.28,
+            "yellow": 0.72,
+            "green": 0,
+            "unclear": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.98
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.16,
+          "confidence": 0.76,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.87,
+            "1": 0.1,
+            "2": 0.03
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "schedule",
+          "confidence": 0.91,
+          "probabilities": {
+            "none": 0,
+            "resourcing": 0,
+            "schedule": 0.93,
+            "scope": 0,
+            "technical": 0.07
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "red",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": -1,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 125,
+      "costUsd": 0.000027720000000000002,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hu1",
+      "gold": {
+        "health": "unclear",
+        "escalate": false,
+        "blocked": false,
+        "risk": "none"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "unclear",
+          "confidence": 0.59,
+          "probabilities": {
+            "unclear": 0.69,
+            "green": 0,
+            "yellow": 0.31,
+            "red": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.36
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.59
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.25
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.77,
+          "confidence": 0.26,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.36,
+            "1": 0.51,
+            "2": 0.13
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "none",
+          "confidence": 0.64,
+          "probabilities": {
+            "schedule": 0.2,
+            "none": 0.72,
+            "resourcing": 0,
+            "technical": 0.08,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "unclear",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 172,
+      "costUsd": 0.000026082000000000002,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hw1",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": false,
+        "risk": "technical"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.91,
+          "probabilities": {
+            "green": 0.07,
+            "yellow": 0.93,
+            "red": 0,
+            "unclear": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.76,
+          "confidence": 0.53,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.28,
+            "1": 0.6799999999999999,
+            "2": 0.04
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "technical",
+          "confidence": 0.99,
+          "probabilities": {
+            "scope": 0,
+            "technical": 1,
+            "none": 0,
+            "resourcing": 0,
+            "schedule": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "yellow",
+        "watermelon": true,
+        "gap": 1,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 110,
+      "costUsd": 0.000027090000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hw2",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": false,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "red",
+          "confidence": 0.41,
+          "probabilities": {
+            "unclear": 0,
+            "red": 0.56,
+            "yellow": 0.43,
+            "green": 0.01
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.97
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.17
+        },
+        "spin": {
+          "type": "score",
+          "score": 1.19,
+          "confidence": 0.32,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.13,
+            "1": 0.55,
+            "2": 0.32
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "schedule",
+          "confidence": 0.99,
+          "probabilities": {
+            "resourcing": 0,
+            "schedule": 1,
+            "technical": 0,
+            "none": 0,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "red",
+        "watermelon": true,
+        "gap": 2,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 118,
+      "costUsd": 0.000027468000000000002,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hw3",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": true,
+        "risk": "scope"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.75,
+          "probabilities": {
+            "red": 0.17,
+            "green": 0.01,
+            "unclear": 0.01,
+            "yellow": 0.81
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.87
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.78
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.97,
+          "confidence": 0.3,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.25,
+            "1": 0.53,
+            "2": 0.22
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "scope",
+          "confidence": 0.48,
+          "probabilities": {
+            "scope": 0.59,
+            "resourcing": 0,
+            "schedule": 0.41,
+            "technical": 0,
+            "none": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "yellow",
+        "watermelon": true,
+        "gap": 1,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 180,
+      "costUsd": 0.000027384000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hw4",
+      "gold": {
+        "health": "red",
+        "escalate": true,
+        "blocked": false,
+        "risk": "resourcing"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.75,
+          "probabilities": {
+            "yellow": 0.81,
+            "green": 0,
+            "unclear": 0.05,
+            "red": 0.14
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.66
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.19,
+          "confidence": 0.71,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.8099999999999999,
+            "1": 0.18,
+            "2": 0.01
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "resourcing",
+          "confidence": 1,
+          "probabilities": {
+            "technical": 0,
+            "schedule": 0,
+            "none": 0,
+            "scope": 0,
+            "resourcing": 1
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 149,
+      "costUsd": 0.000027174000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hw5",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": false,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "green",
+        "latenessDays": 10
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.99,
+          "probabilities": {
+            "yellow": 1,
+            "unclear": 0,
+            "red": 0,
+            "green": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.91
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "spin": {
+          "type": "score",
+          "score": 1.13,
+          "confidence": 0.55,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.09,
+            "1": 0.69,
+            "2": 0.22
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "schedule",
+          "confidence": 0.99,
+          "probabilities": {
+            "scope": 0.01,
+            "none": 0,
+            "schedule": 0.99,
+            "technical": 0,
+            "resourcing": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "green",
+        "actual": "yellow",
+        "watermelon": true,
+        "gap": 1,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 154,
+      "costUsd": 0.000027090000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hy1",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": false,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 6
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.99,
+          "probabilities": {
+            "yellow": 0.99,
+            "green": 0,
+            "unclear": 0,
+            "red": 0.01
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.37
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.88
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.57,
+          "confidence": 0.32,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.44,
+            "1": 0.55,
+            "2": 0.01
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "schedule",
+          "confidence": 1,
+          "probabilities": {
+            "resourcing": 0,
+            "none": 0,
+            "technical": 0,
+            "schedule": 1,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 244,
+      "costUsd": 0.000027300000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hy2",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": false,
+        "risk": "scope"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.97,
+          "probabilities": {
+            "unclear": 0.01,
+            "yellow": 0.97,
+            "green": 0.01,
+            "red": 0.01
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.33
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.81,
+          "confidence": 0.35,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.31,
+            "1": 0.57,
+            "2": 0.12
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "scope",
+          "confidence": 0.97,
+          "probabilities": {
+            "schedule": 0.02,
+            "scope": 0.98,
+            "resourcing": 0,
+            "none": 0,
+            "technical": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 186,
+      "costUsd": 0.000027426000000000005,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hy3",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": false,
+        "risk": "technical"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.97,
+          "probabilities": {
+            "red": 0,
+            "unclear": 0,
+            "yellow": 0.98,
+            "green": 0.02
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.18
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.35,
+          "confidence": 0.47,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.66,
+            "1": 0.33,
+            "2": 0.01
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "technical",
+          "confidence": 1,
+          "probabilities": {
+            "scope": 0,
+            "resourcing": 0,
+            "technical": 1,
+            "schedule": 0,
+            "none": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "human_review"
+      },
+      "latencyMs": 142,
+      "costUsd": 0.000027342000000000004,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hy4",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": false,
+        "risk": "resourcing"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.98,
+          "probabilities": {
+            "unclear": 0,
+            "yellow": 0.99,
+            "red": 0,
+            "green": 0.01
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.79,
+          "confidence": 0.54,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.26,
+            "1": 0.69,
+            "2": 0.05
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "resourcing",
+          "confidence": 0.87,
+          "probabilities": {
+            "technical": 0,
+            "resourcing": 0.9,
+            "schedule": 0.1,
+            "scope": 0,
+            "none": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 117,
+      "costUsd": 0.000027300000000000003,
+      "model": "jev-1.13.0"
+    },
+    {
+      "id": "hy5",
+      "gold": {
+        "health": "yellow",
+        "escalate": false,
+        "blocked": true,
+        "risk": "schedule"
+      },
+      "facts": {
+        "claimed": "yellow",
+        "latenessDays": 0
+      },
+      "answers": {
+        "health": {
+          "type": "choice",
+          "choice": "yellow",
+          "confidence": 0.91,
+          "probabilities": {
+            "red": 0,
+            "yellow": 0.9400000000000001,
+            "green": 0.06,
+            "unclear": 0
+          }
+        },
+        "blocked": {
+          "type": "noul",
+          "noul": 0.94
+        },
+        "slipped": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "escalate": {
+          "type": "noul",
+          "noul": 0.25
+        },
+        "spin": {
+          "type": "score",
+          "score": 0.93,
+          "confidence": 0.47,
+          "legend": {
+            "0": "Candid: problems are stated plainly",
+            "1": "Softened: problems are mentioned but minimized",
+            "2": "Downplayed: real problems are framed as fine"
+          },
+          "probabilities": {
+            "0": 0.21,
+            "1": 0.65,
+            "2": 0.14
+          }
+        },
+        "risk": {
+          "type": "choice",
+          "choice": "technical",
+          "confidence": 0.46,
+          "probabilities": {
+            "none": 0,
+            "resourcing": 0,
+            "schedule": 0.43,
+            "technical": 0.57,
+            "scope": 0
+          }
+        }
+      },
+      "verdict": {
+        "claimed": "yellow",
+        "actual": "yellow",
+        "watermelon": false,
+        "gap": 0,
+        "floorApplied": null,
+        "action": "escalate"
+      },
+      "latencyMs": 126,
+      "costUsd": 0.000027258000000000002,
+      "model": "jev-1.13.0"
+    }
+  ]
+}

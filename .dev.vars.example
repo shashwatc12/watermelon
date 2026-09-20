@@ -1,3 +1,5 @@
 # Copy to .dev.vars for local testing. Never commit .dev.vars.
 # Leave the key empty to run in mock mode (no Jev call is made).
 TYPESAFE_API_KEY=
+# Optional, only for evals/compare.mjs (head-to-head against a Groq-hosted LLM).
+GROQ_API_KEY=

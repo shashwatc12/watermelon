@@ -3,11 +3,15 @@
 //   node evals/run.mjs --mock   keyword stand-in; numbers are NOT Jev numbers
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { DATASET } from "./dataset.mjs";
+import { HOLDOUT } from "./holdout.mjs";
 import { callJev, mockAnswers, costUsd } from "../src/jev.js";
 import { extractFacts } from "../src/extract.js";
 import { verdict, POLICY } from "../src/verdict.js";
 
 const MOCK = process.argv.includes("--mock");
+const HELD = process.argv.includes("--holdout");
+const SET = HELD ? HOLDOUT : DATASET;
+const TAG = HELD ? "holdout" : "";
 function loadKey() {
   if (process.env.TYPESAFE_API_KEY) return process.env.TYPESAFE_API_KEY;
   if (existsSync(".dev.vars")) {
@@ -32,7 +36,7 @@ async function runOne(ex) {
 }
 
 const rows = [];
-const queue = [...DATASET];
+const queue = [...SET];
 await Promise.all(Array.from({ length: 4 }, async () => {
   while (queue.length) {
     const ex = queue.shift();
@@ -103,12 +107,12 @@ const summary = {
   latency: MOCK ? null : { p50: quantile(lat, 0.5), p95: quantile(lat, 0.95), max: Math.max(...lat) },
   cost: { perUpdateUsd: per, per1000Usd: per * 1000 },
 };
-writeFileSync(new URL(MOCK ? "results.mock.json" : "results.json", import.meta.url), JSON.stringify({ summary, rows }, null, 2));
+writeFileSync(new URL(MOCK ? `results${TAG ? "." + TAG : ""}.mock.json` : `results${TAG ? "." + TAG : ""}.json`, import.meta.url), JSON.stringify({ summary, rows }, null, 2));
 
 const f = (x, d = 2) => (x == null ? "n/a" : Number(x).toFixed(d));
 const md = `# Eval report${MOCK ? " (MOCK: keyword stand-in, not Jev)" : ""}
 
-Model: \`${summary.model}\` · ${summary.n} synthetic updates, labels written from scenario facts before the text (see [dataset.mjs](dataset.mjs)).
+Model: \`${summary.model}\` · ${summary.n} synthetic updates${HELD ? " (HELD-OUT: written after the policy was fixed, never used to tune it)" : ""}, labels written from scenario facts before the text (see [${HELD ? "holdout" : "dataset"}.mjs](${HELD ? "holdout" : "dataset"}.mjs)).
 Small set: this is a sanity check with counts shown, not a benchmark.
 
 ## Headline
@@ -144,5 +148,5 @@ ${summary.calibration.map((b) => `| ${b.range} | ${b.n} | ${f(b.meanP)} | ${f(b.
 ## Spin score
 Mean on watermelons: ${f(spinWm)} · on honest updates: ${f(spinHonest)} (0 = candid, 2 = downplayed).
 `;
-writeFileSync(new URL(MOCK ? "REPORT.mock.md" : "REPORT.md", import.meta.url), md);
+writeFileSync(new URL(MOCK ? `REPORT${TAG ? "." + TAG : ""}.mock.md` : `REPORT${TAG ? "." + TAG : ""}.md`, import.meta.url), md);
 console.log(md);
