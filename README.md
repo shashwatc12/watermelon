@@ -51,6 +51,24 @@ Live deployment check (10 sequential requests to the deployed Worker, server-sid
 
 Threshold reasoning and the full sweep: [docs/THRESHOLDS.md](docs/THRESHOLDS.md).
 
+## Jev vs an LLM (same 50 updates)
+
+Same labeled updates, same six questions, one call each. LLMs are Groq-hosted `gpt-oss` models at temperature 0, JSON mode, low reasoning effort, with one plain-language prompt (see [evals/compare.mjs](evals/compare.mjs)). Latency is wall clock from a laptop. Cost uses Groq's published prices.
+
+| System | Health acc | Watermelons caught | False alarms | Escalate precision / recall | p50 / p95 ms | Cost per 1,000 |
+|---|---|---|---|---|---|---|
+| Jev (jev-1.13.0) + code rules | 77% | 11/13 | 0/34 | 63% / 83% | 142 / 286 | $0.0272 |
+| openai/gpt-oss-120b (LLM alone) | 66% | 1/13 | 0/34 | 100% / 50% | 443 / 616 | $0.0984 |
+| openai/gpt-oss-120b + code rules | 72% | 3/13 | 0/34 | 100% / 50% | 443 / 616 | $0.0984 |
+| openai/gpt-oss-20b (LLM alone) | 68% | 0/13 | 0/34 | 100% / 44% | 308 / 412 | $0.0441 |
+| openai/gpt-oss-20b + code rules | 74% | 3/13 | 0/34 | 100% / 44% | 308 / 412 | $0.0441 |
+
+Read this carefully:
+- Jev catches 11 of 13 watermelons. The LLMs catch 0 to 3, even with the same code rules. They rarely disagree with an author's "green" and they under-escalate (44 to 50% recall), though with no false alarms.
+- Jev was about 2 to 3 times faster and 1.6 to 3.6 times cheaper per update.
+- The LLMs' escalation precision is 100%, higher than Jev's 63%. Jev's escalation is tuned toward recall.
+- Fairness caveat: this is one untuned prompt and low reasoning effort. A better prompt or higher reasoning effort would likely close part of the gap, at more cost and latency. Jev's escalation cut-off was tuned on the first 30 updates, and Jev's numbers include the code rules. Treat this as a first comparison, not a leaderboard.
+
 ## What I learned about Jev
 
 1. **Jev under-calls severity.** Alone it labeled 7 of 12 truly-red updates *yellow*. The `escalate` noul carried the signal better than the `health` choice.
@@ -83,4 +101,4 @@ Deploy: `npx wrangler deploy`, then `npx wrangler secret put TYPESAFE_API_KEY` (
 
 ## Next
 
-Re-tuned threshold on real reviewer feedback · a previous-update field so slippage is measured as a delta · head-to-head against LLMs on cost and latency (`evals/compare.mjs`, needs a Groq key) · a CLI / GitHub Action so it runs where updates already live.
+Re-tuned threshold on real reviewer feedback · a previous-update field so slippage is measured as a delta · a tuned-prompt LLM baseline to test how much of the gap is prompting · a CLI / GitHub Action so it runs where updates already live.

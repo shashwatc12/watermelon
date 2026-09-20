@@ -20,6 +20,7 @@ const MODELS = [
   { id: "openai/gpt-oss-20b", inPer1M: 0.075, outPer1M: 0.30 },
 ];
 const SET = [...DATASET, ...HOLDOUT];
+const TPM_BUDGET = 6500; // free tier is ~8k tokens/minute; leave headroom
 const RANK = { green: 0, yellow: 1, red: 2 };
 
 const PROMPT = `You judge weekly program status updates. Return ONLY a JSON object with these keys:
@@ -37,7 +38,7 @@ async function ask(model, text) {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-      body: JSON.stringify({ model: model.id, temperature: 0, reasoning_effort: "low",
+      body: JSON.stringify({ model: model.id, temperature: 0, reasoning_effort: "low", max_completion_tokens: 400,
         response_format: { type: "json_object" }, messages: [{ role: "user", content: PROMPT + text }] }),
     });
     if (res.status === 429 && attempt < 5) { await new Promise((r) => setTimeout(r, 2000 * (attempt + 1))); continue; }
@@ -77,13 +78,14 @@ results.push(score(jevRows, "Jev (jev-1.13.0) + code rules"));
 for (const m of MODELS) {
   const rows = [];
   const queue = [...SET];
-  await Promise.all(Array.from({ length: 3 }, async () => {
+  await Promise.all(Array.from({ length: 1 }, async () => {
     while (queue.length) {
       const ex = queue.shift();
       const { out, latencyMs, usage } = await ask(m, ex.text);
       const facts = extractFacts(ex.text);
       const health = ["green", "yellow", "red", "unclear"].includes(out?.health) ? out.health : "unclear";
       const cost = ((usage?.prompt_tokens ?? 0) * m.inPer1M + (usage?.completion_tokens ?? 0) * m.outPer1M) / 1e6;
+      await new Promise((r) => setTimeout(r, Math.ceil(((usage?.total_tokens ?? 600) / TPM_BUDGET) * 60_000))); // stay under the tokens/minute cap
       rows.push({ id: ex.id, gold: ex.gold, facts, health, escalate: out?.escalate === true, latencyMs, cost, tokens: usage });
     }
   }));
