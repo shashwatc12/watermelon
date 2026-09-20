@@ -47,6 +47,8 @@ Labels were written from scenario facts *before* the text was rendered, never fr
 
 Six extra probes of Jev's documented weak spots (date arithmetic, double negative, prompt injection, numbers-only prose, terse red, good news in a bad tone) all came out right ([evals/failure-modes.json](evals/failure-modes.json)). Six probes is a smoke test, not a proof.
 
+Live deployment check (10 sequential requests to the deployed Worker, server-side Jev call time): p50 175 ms, p95 276 ms, about $0.000028 per request. The public rate limit is 12 requests a minute per IP, so the bench uses 10.
+
 Threshold reasoning and the full sweep: [docs/THRESHOLDS.md](docs/THRESHOLDS.md).
 
 ## What I learned about Jev
