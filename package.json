@@ -1,17 +1,24 @@
 {
   "name": "watermelon",
   "version": "0.1.0",
-  "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "test": "node --test tests/core.test.mjs",
+    "start": "node server.js",
+    "check": "node bin/watermelon.js",
+    "test": "node --test tests/*.test.mjs",
     "eval": "node evals/run.mjs",
+    "eval:holdout": "node evals/run.mjs --holdout",
     "eval:mock": "node evals/run.mjs --mock",
-    "bench": "node scripts/bench.mjs"
+    "bench": "node scripts/bench.mjs",
+    "dev:cf": "npx wrangler dev",
+    "deploy:cf": "npx wrangler deploy"
   },
-  "devDependencies": {
-    "wrangler": "^4"
+  "type": "module",
+  "description": "Checks whether a weekly program status update's claimed status matches the facts it describes, using Jev (TypeSafe AI's System One model).",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
   },
-  "type": "module"
+  "bin": {
+    "watermelon": "bin/watermelon.js"
+  }
 }
