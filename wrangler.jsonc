@@ -4,6 +4,10 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "routes": [{ "pattern": "watermelon.shashwatchavan.com", "custom_domain": true }],
+  "durable_objects": {
+    "bindings": [{ "name": "FEEDBACK", "class_name": "FeedbackLog" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FeedbackLog"] }],
   "observability": { "enabled": true },
   "assets": {
     "directory": "./public",

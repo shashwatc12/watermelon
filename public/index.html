@@ -4,98 +4,313 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Watermelon</title>
-<meta name="description" content="Green on the outside, red on the inside. Paste a weekly status update and Jev checks whether the status label matches the facts.">
+<meta name="description" content="Green on the outside, red on the inside. Paste a weekly status update and Jev checks whether the label matches the facts.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍉</text></svg>">
 <style>
+  /* Dark-only by design: the product is a rind/flesh metaphor and the palette carries it.
+     Status hues are the reserved status palette (good/warning/critical), never decorative,
+     and always paired with a text label so colour never carries meaning alone. */
   :root {
-    --bg: #f7f6f2; --panel: #fff; --ink: #1b1b18; --muted: #6b6a63; --line: #e2e0d8;
-    --green: #2f7d4f; --yellow: #b7791f; --red: #c0392b; --grey: #8a8980; --accent: #23408e;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #141412; --panel: #1d1d1a; --ink: #eeede6; --muted: #a09f96; --line: #33322d;
-      --green: #58b47c; --yellow: #e0a84a; --red: #ee6b5c; --grey: #8a8980; --accent: #8fa8f0;
-    }
+    --plane: #0a0f0b;
+    --surface: #141a15;
+    --rind: #1b241c;
+    --line: #263028;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --critical: #d03b3b;
+    --focus: #7fd07f;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.02em; }
-  .sub { color: var(--muted); margin: 0 0 24px; max-width: 62ch; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  textarea { width: 100%; min-height: 150px; resize: vertical; padding: 12px; border-radius: 8px;
-    border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
-  button { font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
-    color: var(--ink); padding: 8px 12px; cursor: pointer; }
-  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
-  button:disabled { opacity: .55; cursor: wait; }
-  .grow { flex: 1; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--plane); color: var(--ink);
+    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 56px 16px 80px; }
+  html, body { overflow-x: hidden; }
+  ::selection { background: var(--critical); color: #fff; }
+  a { color: var(--ink-2); text-underline-offset: 3px; }
+  a:hover { color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+
+  /* ---- masthead ---- */
+  .mark { display: flex; align-items: baseline; gap: 10px; }
+  .mark h1 { font-size: 21px; font-weight: 640; letter-spacing: -0.02em; margin: 0; }
+  .mark span { color: var(--muted); font-size: 13px; }
+  .lede {
+    margin: 22px 0 40px; font-size: clamp(22px, 3.6vw, 31px); line-height: 1.25;
+    letter-spacing: -0.025em; font-weight: 560; max-width: 20ch; text-wrap: balance;
+  }
+  .lede em { font-style: normal; color: var(--critical); }
+  .lede small { display: block; margin-top: 14px; font-size: 16px; font-weight: 400;
+    letter-spacing: 0; line-height: 1.5; color: var(--muted); max-width: 54ch; }
+
+  /* ---- composer ---- */
+  .composer { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; }
+  textarea {
+    width: 100%; min-height: 128px; resize: vertical; display: block;
+    padding: 16px; border: 0; border-radius: 10px;
+    background: transparent; color: var(--ink); font: inherit; line-height: 1.6;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { outline: none; }
+  .composer:focus-within { border-color: #3a4a3c; }
+  .bar { display: flex; gap: 10px; align-items: center; padding: 8px 10px 10px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 550; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--rind); color: var(--ink-2);
+    padding: 9px 14px; transition: background .15s, color .15s, border-color .15s;
+  }
+  button:hover { background: #222d23; color: var(--ink); }
+  button.primary { background: var(--ink); color: #0a0f0b; border-color: var(--ink); }
+  button.primary:hover { background: #e6e6e0; }
+  button:disabled { opacity: .5; cursor: progress; }
+  .grow { flex: 1 1 auto; }
   .count { color: var(--muted); font-size: 13px; }
-  .samples { color: var(--muted); font-size: 13px; }
-  #out { margin-top: 20px; }
-  .check { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
-  .side { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--panel); }
-  .side small { display: block; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-size: 12px; }
-  .status { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 24px; font-weight: 700; text-transform: capitalize; }
-  .dot { width: 26px; height: 26px; border-radius: 50%; background: var(--grey); flex: none; transition: background .5s; }
-  .dot.green { background: var(--green); } .dot.yellow { background: var(--yellow); } .dot.red { background: var(--red); }
-  .arrow { align-self: center; font-size: 22px; color: var(--muted); }
-  .banner { margin-top: 12px; padding: 12px 16px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); background: var(--panel); }
-  .banner.wm { border-color: var(--red); color: var(--red); }
-  .banner.ok { border-color: var(--green); color: var(--green); }
-  .banner span { display: block; font-weight: 400; color: var(--muted); margin-top: 2px; font-size: 14px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 16px; }
-  .cell { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel); }
-  .cell b { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .cell .v { font-size: 18px; font-weight: 600; }
-  .cell .q { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  .bar { height: 8px; border-radius: 4px; background: var(--line); margin: 6px 0 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--accent); }
-  .prob { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
-  .strip { margin-top: 16px; display: flex; gap: 8px 20px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
-  .strip strong { color: var(--ink); }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--yellow); color: #fff; font-size: 12px; }
-  .err { color: var(--red); margin-top: 12px; }
-  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
-  a { color: var(--accent); }
-  @media (max-width: 560px) { .check { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; } }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: baseline; }
+  .chips > span { color: var(--muted); font-size: 13px; margin-right: 2px; }
+  .chip { font-size: 13.5px; padding: 6px 11px; border-radius: 99px; }
+
+  /* ---- verdict ---- */
+  #out { margin-top: 30px; }
+  .slice {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line); background: var(--surface); isolation: isolate;
+  }
+  .face { padding: clamp(24px, 5vw, 38px); }
+  .face.under { position: relative; }
+  .face.over { position: absolute; inset: 0; background: var(--surface); z-index: 2; }
+  /* The wipe is the whole idea: the rind is cut away and the flesh underneath shows. */
+  .slice.cut .face.over { clip-path: inset(0 0 0 100%); transition: clip-path .62s cubic-bezier(.22,.61,.36,1); }
+  .face.over { clip-path: inset(0 0 0 0); }
+  .kicker { font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .word {
+    display: flex; align-items: center; gap: 15px; margin-top: 12px;
+    font-size: clamp(42px, 9vw, 74px); font-weight: 700; letter-spacing: -0.045em; line-height: 1;
+    text-transform: lowercase;
+  }
+  .pip { width: .42em; height: .42em; border-radius: 50%; flex: none; background: currentColor; }
+  .green { color: var(--good); } .yellow { color: var(--warning); } .red { color: var(--critical); }
+  .unclear { color: var(--muted); }
+  .claimchip { position: absolute; top: 18px; right: 18px; display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--rind);
+    border: 1px solid var(--line); border-radius: 99px; padding: 5px 11px; }
+  .claimchip .pip { width: 8px; height: 8px; }
+  .claimchip s { text-decoration-color: var(--muted); text-decoration-thickness: 1.5px; }
+  .rationale { margin-top: 16px; color: var(--ink-2); font-size: 15px; max-width: 58ch; }
+  .rationale b { color: var(--ink); font-weight: 600; }
+
+  /* seeds: one dot ≈ 4% of Jev's probability mass across the four health states */
+  .seedwrap { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .seedwrap > .kicker { margin-bottom: 12px; }
+  .seeds { display: flex; gap: 18px; flex-wrap: wrap; }
+  .seedgroup { display: flex; flex-direction: column; gap: 7px; }
+  .dots { display: flex; gap: 3px; height: 9px; align-items: center; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: currentColor; display: block; }
+  .seedgroup small { font-size: 12px; color: var(--muted); letter-spacing: .01em; }
+
+  /* ---- judgments ---- */
+  .section { margin-top: 30px; }
+  .section > h2 {
+    font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted);
+    font-weight: 600; margin: 0 0 12px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px;
+    letter-spacing: .06em; text-transform: uppercase; padding: 0 0 9px; }
+  th:last-child, td:last-child { text-align: right; }
+  td { padding: 11px 0; border-top: 1px solid var(--line); vertical-align: baseline; }
+  td.q { color: var(--ink-2); }
+  td.q em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  td.v { font-weight: 600; white-space: nowrap; }
+  .meter { width: 96px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; display: inline-block; vertical-align: middle; }
+  .meter i { display: block; height: 100%; border-radius: 2px; background: var(--ink-2); }
+
+  /* ---- receipts ---- */
+  .kpis { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .kpi small { display: block; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .kpi b { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+  .kpi b span { font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+  .flag { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 99px;
+    background: rgba(250,178,25,.12); color: var(--warning); font-size: 13px; font-weight: 600; }
+  .explain { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 640; letter-spacing: -0.01em; }
+  .card p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
+  .card b { color: var(--ink); font-weight: 600; }
+  .card code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+    background: var(--rind); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: var(--ink); }
+  /* ---- reviewer feedback ---- */
+  .fb { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .fb .ask { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .fb .ask p { margin: 0; font-size: 15px; font-weight: 550; margin-right: 4px; }
+  .fb button[aria-pressed="true"] { background: var(--ink); color: #0a0f0b; border-color: var(--ink); }
+  .fb .more { margin-top: 14px; display: grid; gap: 10px; max-width: 560px; }
+  .fb input[type="text"], .fb select {
+    font: inherit; width: 100%; padding: 10px 12px; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .fb select { appearance: none; }
+  .fb label.check { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+  .fb label.check input { margin-top: 3px; accent-color: var(--good); flex: none; }
+  .fb .done { font-size: 15px; color: var(--ink-2); }
+  .tally { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+  .tally b { color: var(--ink-2); font-weight: 600; }
+  .err { color: var(--critical); margin-top: 16px; font-weight: 500; }
+
+  footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  @media (max-width: 620px) {
+    main { padding-top: 36px; }
+    .kpis { gap: 16px 22px; }
+    td.q em { display: none; }
+    .meter { display: none; }
+    td.v { white-space: normal; }
+    table { font-size: 14px; }
+    .claimchip { position: static; margin-bottom: 14px; }
+    .face.over { padding-top: clamp(24px, 5vw, 38px); }
+    .explain { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slice.cut .face.over { transition: none; }
+  }
 </style>
 </head>
 <body>
 <main>
-  <h1>🍉 Watermelon</h1>
-  <p class="sub">Green on the outside, red on the inside. Paste a weekly status update. <a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> answers six typed questions in one call and checks whether the status label matches the facts.</p>
+  <div class="mark"><h1>🍉 Watermelon</h1><span>status updates, checked</span></div>
 
-  <div class="panel">
-    <textarea id="state" maxlength="4000" placeholder="Paste a weekly status update, or pick a sample below."></textarea>
-    <div class="row">
-      <button class="primary" id="go">Check it</button>
-      <span class="samples">Samples:</span>
-      <span id="samples" class="row" style="margin:0"></span>
+  <p class="lede">Green on the outside. <em>Red on the inside.</em>
+    <small>Paste a weekly program update. <a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> answers six typed
+    questions about it in a single call, and we check the answer against the status the author claimed.</small></p>
+
+  <div class="composer">
+    <label class="sr" for="state" hidden>Status update</label>
+    <textarea id="state" maxlength="4000" placeholder="Paste a weekly status update, or try one below…"></textarea>
+    <div class="bar">
+      <button class="primary" id="go">Cut it open</button>
       <span class="grow"></span>
       <span class="count" id="count">0 / 4000</span>
     </div>
   </div>
+  <div class="chips"><span>Try:</span><span id="samples" class="chips" style="margin:0"></span></div>
 
-  <div id="err" class="err" role="alert"></div>
+  <div id="err" class="err" role="alert" aria-live="polite"></div>
+
   <div id="out" hidden>
-    <div class="check">
-      <div class="side"><small>What the update claims</small><div class="status"><span class="dot" id="claimDot"></span><span id="claimTxt"></span></div></div>
-      <div class="arrow" aria-hidden="true">→</div>
-      <div class="side"><small>What the facts support</small><div class="status"><span class="dot" id="realDot"></span><span id="realTxt"></span></div></div>
+    <div class="slice" id="slice">
+      <div class="face under">
+        <div class="claimchip" id="claimchip" hidden><span class="pip"></span><span>claimed <s id="claimWord"></s></span></div>
+        <div class="kicker" id="kickerB">What the facts support</div>
+        <div class="word" id="wordB"><span class="pip"></span><span></span></div>
+        <div class="rationale" id="why"></div>
+        <div class="seedwrap">
+          <div class="kicker" id="seedTitle">Jev’s health distribution</div>
+          <div class="seeds" id="seeds"></div>
+        </div>
+      </div>
+      <div class="face over" id="over">
+        <div class="kicker">What the update claims</div>
+        <div class="word" id="wordA"><span class="pip"></span><span></span></div>
+      </div>
     </div>
-    <div class="banner" id="banner"></div>
-    <div class="grid" id="grid"></div>
-    <div class="strip" id="strip"></div>
+
+    <div class="section">
+      <h2>The six judgments, one Jev call</h2>
+      <table>
+        <thead><tr><th scope="col">Question</th><th scope="col">Jev</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="fb" id="fb" hidden>
+        <div class="ask" id="ask">
+          <p>Was this call right?</p>
+          <button id="yes" aria-pressed="false">Yes</button>
+          <button id="no" aria-pressed="false">No</button>
+        </div>
+        <div class="more" id="more" hidden>
+          <select id="role" aria-label="Your role">
+            <option value="">Your role (optional)</option>
+            <option value="tpm">TPM / program lead</option>
+            <option value="manager">Eng manager</option>
+            <option value="engineer">Engineer</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="text" id="comment" maxlength="400" placeholder="What did it get right or wrong? (optional)">
+          <label class="check"><input type="checkbox" id="shareText">
+            You may keep the update text I pasted, to help re-tune the thresholds. Off by default — votes are
+            recorded without it.</label>
+          <div><button class="primary" id="send">Send</button></div>
+        </div>
+        <div class="tally" id="tally"></div>
+      </div>
+    </div>
   </div>
 
+  <section class="section" id="about">
+    <h2>What this is</h2>
+    <div class="explain">
+      <div class="card">
+        <h3>The problem</h3>
+        <p>Program status is self-reported, and self-reports are optimistic. The costly one is the
+        <b>watermelon</b>: an update labelled green whose own text describes a blocked vendor, a missed date or a
+        team that just lost half its engineers. A lead reading forty of these a week will miss some, and the miss
+        shows up later as a surprise escalation.</p>
+      </div>
+      <div class="card">
+        <h3>What Jev is</h3>
+        <p><a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> is TypeSafe AI’s <b>System One</b>
+        model. It doesn’t write prose — it returns <b>typed decisions</b> with calibrated probabilities:
+        <code>choice</code> (pick one option), <code>noul</code> (probability of yes) and <code>score</code>
+        (a point on an ordered scale). Many questions are answered in one parallel call, typically in
+        100–300&nbsp;ms, billed on input tokens only.</p>
+      </div>
+      <div class="card">
+        <h3>Why Jev fits this job</h3>
+        <p>Judging an update is a fast, repeated, typed decision — not a writing task. One call returns all six
+        answers for roughly <b>$0.00003</b>, so it is cheap enough to run on every update from every team. Output
+        tokens are free, so the sixth question costs about the same as the first. And because each answer is a
+        probability, the escalation cut-off becomes a <b>policy decision</b> you can tune, rather than a model’s
+        opinion you have to accept.</p>
+      </div>
+      <div class="card">
+        <h3>What code does, and what Jev does</h3>
+        <p>Jev’s own docs say it is unreliable with dates and arithmetic, so it never sees a maths problem here.
+        <b>Code</b> parses the claimed label and turns “3 weeks behind” into days, then floors health at yellow past
+        7 days and red past 21. <b>Jev</b> judges the language. When code overrules Jev, the page says so — see the
+        note above the seed strip.</p>
+      </div>
+      <div class="card">
+        <h3>What was measured</h3>
+        <p>50 synthetic updates whose labels were written from scenario facts <b>before</b> the text existed, split
+        into 30 for tuning and 20 held out. Jev plus the code rules caught <b>11 of 13</b> watermelons with
+        <b>0 false alarms in 34</b> honest updates. Trusting the author’s label catches none, by construction. The
+        same 50 through Groq-hosted <code>gpt-oss</code> models caught 3 — at 2–3× the latency and 1.6–3.6× the cost.</p>
+      </div>
+      <div class="card">
+        <h3>What this does not prove</h3>
+        <p>Fifty examples, all synthetic, all written by one person: a sanity check, not a benchmark. The escalation
+        threshold was tuned on the first 30, and recall on the held-out 20 fell from 91% to 71%. The LLM comparison
+        used one untuned prompt at low reasoning effort, so a better prompt would close part of that gap. All of it
+        is in the repo, including the misses.</p>
+      </div>
+    </div>
+  </section>
+
   <footer>
-    Code reads the numbers (lateness, claimed label); Jev reads the language. Escalation thresholds are policy, set from a labeled eval. Do not paste confidential text; samples are synthetic.
-    <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source and eval</a>.
+    Code reads the numbers (the claimed label, “3 weeks late” → days); Jev reads the language. Escalation thresholds are
+    policy, set from a labelled eval, not model output. Your update is not stored unless you tick the box when leaving
+    feedback; votes are recorded without it. Samples are synthetic — please don’t paste anything confidential. <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source, eval and method</a>.
   </footer>
 </main>
+
 <script>
 const SAMPLES = {
   "Honest green": "Status: green. Week 3 of Atlas onboarding. Demo shipped Tuesday to the pilot team, all milestones on schedule, team fully staffed. No open risks.",
@@ -104,101 +319,214 @@ const SAMPLES = {
   "Honest red": "Status: red. The API migration is blocked on the vendor security review, which is now 3 weeks late. The launch date of Nov 4 cannot hold. We need an executive to escalate with the vendor.",
   "Nothing new": "Status: green. Nothing new this week.",
 };
+const QUESTIONS = [
+  ["health", "Health the facts support", "choice · green / yellow / red / unclear"],
+  ["escalate", "Needs exec attention now", "noul · policy escalates at 20%"],
+  ["blocked", "Blocked on another team", "noul"],
+  ["slipped", "A committed date slipped", "noul"],
+  ["spin", "Wording downplays problems", "score · 0 candid → 2 downplayed"],
+  ["risk", "Dominant risk", "choice"],
+];
+const ACTION = {
+  escalate: "Escalate",
+  human_review: "Send to a human",
+  no_action: "No action needed",
+};
 const $ = (id) => document.getElementById(id);
 const state = $("state");
-const ACTION = {
-  escalate: ["Escalate", "Escalation probability is above the policy line."],
-  human_review: ["Human review", "Uncertain: not enough signal to escalate, too much to ignore."],
-  no_action: ["No action needed", "Escalation probability is below the review line."],
-};
+const pct = (p) => `${Math.round(p * 100)}%`;
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
 for (const [name, text] of Object.entries(SAMPLES)) {
-  const b = document.createElement("button");
-  b.textContent = name;
-  b.onclick = () => { state.value = text; count(); };
+  const b = el("button", "chip", name);
+  b.onclick = () => { state.value = text; count(); state.focus(); };
   $("samples").append(b);
 }
 function count() { $("count").textContent = `${state.value.length} / 4000`; }
 state.addEventListener("input", count);
 
-function cell(label, value, prob, note) {
-  const d = document.createElement("div"); d.className = "cell";
-  const b = document.createElement("b"); b.textContent = label;
-  const v = document.createElement("div"); v.className = "v"; v.textContent = value;
-  d.append(b, v);
-  if (prob != null) {
-    const bar = document.createElement("div"); bar.className = "bar";
-    const i = document.createElement("i"); i.style.width = `${Math.round(prob * 100)}%`; bar.append(i);
-    d.append(bar);
-  }
-  if (note) { const q = document.createElement("div"); q.className = "q"; q.textContent = note; d.append(q); }
-  return d;
-}
-const pctTxt = (p) => `${Math.round(p * 100)}%`;
-function topProbs(a) {
-  return Object.entries(a.probabilities).sort((x, y) => y[1] - x[1]).slice(0, 3)
-    .map(([k, p]) => `${k} ${pctTxt(p)}`).join(" · ");
-}
-function setDot(dot, txt, status) {
-  dot.className = `dot ${status || ""}`;
-  txt.textContent = status || "not stated";
+function setWord(node, status) {
+  node.className = `word ${status || "unclear"}`;
+  node.lastElementChild.textContent = status || "not stated";
 }
 
-async function run() {
-  $("err").textContent = "";
-  const text = state.value.trim();
-  if (!text) { $("err").textContent = "Paste an update or pick a sample."; return; }
-  const btn = $("go"); btn.disabled = true; btn.textContent = "Checking…";
-  try {
-    const res = await fetch("/api/assess", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state: text }) });
-    const d = await res.json();
-    if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
-    render(d);
-  } catch (e) { $("err").textContent = e.message; $("out").hidden = true; }
-  finally { btn.disabled = false; btn.textContent = "Check it"; }
+// One dot ≈ 4% of the probability mass. A unit chart reads as seeds up close
+// and as a distribution at a glance. Every group is directly labelled.
+function renderSeeds(probabilities) {
+  const box = $("seeds"); box.replaceChildren();
+  const entries = Object.entries(probabilities).sort((a, b) => b[1] - a[1]);
+  for (const [name, p] of entries) {
+    const n = Math.round(p * 25);
+    if (n < 1) continue;
+    const g = el("div", `seedgroup ${name}`);
+    const dots = el("div", "dots");
+    for (let i = 0; i < n; i++) dots.append(el("i"));
+    g.append(dots, el("small", null, `${name} ${pct(p)}`));
+    g.title = `Jev put ${pct(p)} of its probability on ${name}`;
+    box.append(g);
+  }
+}
+
+function renderRows(a) {
+  const body = $("rows"); body.replaceChildren();
+  for (const [key, label, note] of QUESTIONS) {
+    const ans = a[key]; if (!ans) continue;
+    const tr = el("tr");
+    const q = el("td", "q"); q.append(document.createTextNode(label), el("em", null, note));
+    const v = el("td", "v");
+    let ratio = 0, text = "";
+    if (ans.type === "noul") { ratio = ans.noul; text = pct(ans.noul); }
+    else if (ans.type === "score") { ratio = (ans.score ?? 0) / 2; text = (ans.score ?? 0).toFixed(2); }
+    else { ratio = ans.probabilities?.[ans.choice] ?? ans.confidence ?? 0; text = `${ans.choice} · ${pct(ans.confidence)}`; }
+    const m = el("span", "meter"); const fill = el("i"); fill.style.width = `${Math.round(Math.min(1, ratio) * 100)}%`; m.append(fill);
+    v.append(m, document.createTextNode(" " + text));
+    tr.append(q, v); body.append(tr);
+  }
+}
+
+function renderKpis(d) {
+  const k = $("kpis"); k.replaceChildren();
+  if (d.meta.mock) {
+    const f = el("span", "flag"); f.append("● mock mode — no Jev call made"); k.append(f);
+  }
+  const tile = (label, value, unit) => {
+    const w = el("div", "kpi"); w.append(el("small", null, label));
+    const b = el("b", null, value); if (unit) b.append(el("span", null, " " + unit));
+    w.append(b); return w;
+  };
+  k.append(
+    tile("Latency", String(d.meta.latencyMs), "ms"),
+    tile("Judgments", "6", "in 1 call"),
+    tile("Input tokens", String(d.meta.inputTokens)),
+    tile("Cost", "$" + d.meta.costUsd.toFixed(6)),
+    tile("Model", d.model),
+  );
 }
 
 function render(d) {
   const { answers: a, verdict: v, facts, meta } = d;
   $("out").hidden = false;
-  setDot($("claimDot"), $("claimTxt"), v.claimed);
-  // Show the claim first, then flip to the facts so the disagreement is visible.
-  setDot($("realDot"), $("realTxt"), null); $("realTxt").textContent = "…";
-  setTimeout(() => setDot($("realDot"), $("realTxt"), v.actual === "unclear" ? null : v.actual), 350);
-  if (v.actual === "unclear") $("realTxt").textContent = "unclear";
+  const slice = $("slice");
+  slice.classList.remove("cut");
 
-  const banner = $("banner");
-  const [title, why] = ACTION[v.action];
-  banner.className = `banner ${v.watermelon ? "wm" : "ok"}`;
-  banner.replaceChildren(document.createTextNode(
-    (v.watermelon ? `🍉 Watermelon: claims ${v.claimed}, facts say ${v.actual}. ` : v.claimed ? "Label matches the facts. " : "No status label found. ") + `Action: ${title}.`));
-  const sub = document.createElement("span");
-  sub.textContent = why + (v.floorApplied ? ` Code raised health to ${v.floorApplied} because the text states ${facts.latenessDays} days of lateness.` : "");
-  banner.append(sub);
+  const claimed = v.claimed;
+  const actual = v.actual === "unclear" ? null : v.actual;
+  setWord($("wordA"), claimed);
+  setWord($("wordB"), actual);
+  $("kickerB").textContent = claimed && !v.watermelon ? "The facts agree" : "What the facts support";
 
-  const g = $("grid"); g.replaceChildren(
-    cell("Health (Jev)", `${a.health.choice} · ${pctTxt(a.health.confidence)} confident`, a.health.probabilities[a.health.choice], topProbs(a.health)),
-    cell("Escalate (noul)", pctTxt(a.escalate.noul), a.escalate.noul, "P(yes). Policy escalates at 20%: Jev's noul runs low."),
-    cell("Blocked (noul)", pctTxt(a.blocked.noul), a.blocked.noul),
-    cell("Slipped (noul)", pctTxt(a.slipped.noul), a.slipped.noul),
-    cell("Spin (score 0–2)", (a.spin.score ?? 0).toFixed(2), (a.spin.score ?? 0) / 2, "0 candid · 1 softened · 2 downplayed"),
-    cell("Dominant risk", `${a.risk.choice} · ${pctTxt(a.risk.confidence)}`, a.risk.probabilities?.[a.risk.choice] ?? a.risk.confidence, a.risk.probabilities ? topProbs(a.risk) : ""),
-  );
+  const why = $("why"); why.replaceChildren();
+  const act = el("b", null, ACTION[v.action] + ".");
+  const detail = v.watermelon
+    ? ` The update calls itself ${claimed}, but the facts in it support ${v.actual}.`
+    : claimed ? ` The ${claimed} label matches what the update describes.`
+    : " No status label was stated in the update.";
+  const floor = v.floorApplied ? ` Code raised health to ${v.floorApplied} because the text states ${facts.latenessDays} days of lateness.` : "";
+  why.append(act, document.createTextNode(detail + floor));
 
-  const s = $("strip"); s.replaceChildren();
-  const add = (label, val) => { const e = document.createElement("span"); e.append(label + " "); const st = document.createElement("strong"); st.textContent = val; e.append(st); s.append(e); };
-  if (meta.mock) { const m = document.createElement("span"); m.className = "badge"; m.textContent = "mock mode: no Jev call made"; s.append(m); }
-  add("6 judgments in 1 call ·", `${meta.latencyMs} ms`);
-  add("tokens", String(meta.inputTokens));
-  add("cost", `$${meta.costUsd.toFixed(6)}`);
-  add("model", d.model);
-  if (facts.latenessDays) add("lateness parsed by code", `${facts.latenessDays} days`);
+  $("seedTitle").textContent = v.floorApplied
+    ? "Jev’s health distribution — before code raised it to " + v.floorApplied
+    : "Jev’s health distribution";
+  receipt = d.receipt || null;
+  agree = null;
+  $("fb").hidden = !receipt;
+  $("ask").replaceChildren(el("p", null, "Was this call right?"), $("yes"), $("no"));
+  $("yes").setAttribute("aria-pressed", "false");
+  $("no").setAttribute("aria-pressed", "false");
+  $("more").hidden = true;
+  $("send").disabled = false; $("send").textContent = "Send";
+  $("comment").value = ""; $("shareText").checked = false;
+
+  renderSeeds(a.health.probabilities);
+  renderRows(a);
+  renderKpis(d);
+
+  const chip = $("claimchip");
+  chip.hidden = !v.watermelon;
+  if (v.watermelon) { chip.firstElementChild.className = `pip ${claimed}`; $("claimWord").textContent = claimed; }
+
+  // No claimed label, or the label was honest: no reveal to perform. Stillness is the answer.
+  if (!claimed || !v.watermelon) {
+    $("over").style.display = "none";
+    return;
+  }
+  $("over").style.display = "";
+  requestAnimationFrame(() => requestAnimationFrame(() => slice.classList.add("cut")));
+}
+
+// ---- reviewer feedback ----
+let receipt = null, agree = null;
+function setVote(v) {
+  agree = v;
+  $("yes").setAttribute("aria-pressed", String(v === true));
+  $("no").setAttribute("aria-pressed", String(v === false));
+  $("more").hidden = false;
+}
+$("yes").onclick = () => setVote(true);
+$("no").onclick = () => setVote(false);
+
+function showTally(s) {
+  if (!s || !s.n) { $("tally").textContent = ""; return; }
+  const rate = Math.round((100 * s.agreed) / s.n);
+  const wm = s.watermelonCalls
+    ? ` On the ${s.watermelonCalls} watermelon call${s.watermelonCalls === 1 ? "" : "s"}, ${Math.round((100 * s.watermelonAgreed) / s.watermelonCalls)}% agreed.`
+    : "";
+  $("tally").replaceChildren();
+  const b = el("b", null, `${s.n} reviewer${s.n === 1 ? "" : "s"}`);
+  $("tally").append(b, document.createTextNode(`${s.n === 1 ? " has" : " have"} voted so far; ${rate}% agreed with the call.${wm}`));
+}
+
+$("send").onclick = async () => {
+  if (agree === null || !receipt) return;
+  const btn = $("send"); btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const res = await fetch("/api/feedback", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        receipt, agree, role: $("role").value || undefined,
+        comment: $("comment").value || undefined,
+        shareText: $("shareText").checked,
+        state: $("shareText").checked ? state.value.trim() : undefined,
+      }),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || "Could not record that vote.");
+    $("ask").replaceChildren(el("div", "done", "Thanks — that vote goes into the threshold re-tune."));
+    $("more").hidden = true;
+    showTally(d.stats);
+  } catch (e) {
+    $("err").textContent = e.message;
+    btn.disabled = false; btn.textContent = "Send";
+  }
+};
+
+fetch("/api/stats").then((r) => r.json()).then(showTally).catch(() => {});
+
+async function run() {
+  $("err").textContent = "";
+  const text = state.value.trim();
+  if (!text) { $("err").textContent = "Paste an update, or pick one of the samples."; return; }
+  const btn = $("go"); btn.disabled = true; btn.textContent = "Cutting…";
+  try {
+    const res = await fetch("/api/assess", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state: text }),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || `Request failed (${res.status})`);
+    render(d);
+  } catch (e) {
+    $("err").textContent = e.message;
+    $("out").hidden = true;
+  } finally {
+    btn.disabled = false; btn.textContent = "Cut it open";
+  }
 }
 $("go").onclick = run;
-// Shareable deep link: /?sample=Vendor%20watermelon runs that sample immediately.
+state.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
+
+// Shareable deep link: /?sample=Vendor%20watermelon runs that sample on load.
 const q = new URLSearchParams(location.search).get("sample");
 if (q && SAMPLES[q]) { state.value = SAMPLES[q]; count(); run(); }
-state.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
 </script>
 </body>
 </html>

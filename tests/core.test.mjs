@@ -58,3 +58,30 @@ test("callJev never leaks the upstream body on failure", async () => {
   const fake = async () => new Response('{"secret":"echo"}', { status: 401 });
   await assert.rejects(callJev("x", "k", undefined, fake), (e) => e.status === 401 && !e.message.includes("secret"));
 });
+
+// --- receipts: a vote must not be able to claim a verdict Jev never produced ---
+import { sign, verify } from "../src/receipt.js";
+
+test("a receipt round-trips and carries the verdict", async () => {
+  const r = await sign({ actual: "red", watermelon: true, pEscalate: 0.8 }, "s3cret");
+  const p = await verify(r, "s3cret");
+  assert.equal(p.actual, "red");
+  assert.equal(p.watermelon, true);
+  assert.equal(p.pEscalate, 0.8);
+});
+test("a receipt signed with another secret is rejected", async () => {
+  assert.equal(await verify(await sign({ actual: "red" }, "a"), "b"), null);
+});
+test("a tampered receipt is rejected", async () => {
+  const r = await sign({ actual: "green" }, "s");
+  const [body, sig] = r.split(".");
+  const forged = btoa(JSON.stringify({ actual: "red", iat: Date.now() })).replace(/=+$/, "");
+  assert.equal(await verify(`${forged}.${sig}`, "s"), null);
+  assert.equal(await verify(`${body}.`, "s"), null);
+});
+test("an expired receipt is rejected", async () => {
+  assert.equal(await verify(await sign({ actual: "red" }, "s"), "s", -1), null);
+});
+test("garbage receipts do not throw", async () => {
+  for (const bad of [null, undefined, "", "nodot", 42, "a.b"]) assert.equal(await verify(bad, "s"), null);
+});

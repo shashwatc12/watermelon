@@ -20,15 +20,18 @@ A TPM reads dozens of status updates a week. The expensive failure is the update
 ## Architecture
 
 ```
-browser ──POST /api/assess──▶ Cloudflare Worker
-                               ├─ extract.js   code: claimed label, "N weeks late" → days
-                               ├─ jev.js       ONE Jev call, six questions (the only network seam)
-                               └─ verdict.js   Jev answers + facts + POLICY → watermelon?, action
+browser ──POST /api/assess────▶ Cloudflare Worker
+                                 ├─ extract.js   code: claimed label, "N weeks late" → days
+                                 ├─ jev.js       ONE Jev call, six questions (the only network seam)
+                                 ├─ verdict.js   Jev answers + facts + POLICY → watermelon?, action
+                                 └─ receipt.js   signs the verdict so a later vote can't misreport it
+       ──POST /api/feedback───▶  └─ feedback.js  Durable Object + SQLite: reviewer votes
+       ──GET  /api/stats─────▶      public tally; owner's bearer token also returns rows
 ```
 
 - **Code reads numbers, Jev reads language.** Jev's docs say it is unreliable with dates and arithmetic, so `extract.js` parses "3 weeks late" and `verdict.js` floors health at yellow (7+ days) or red (21+ days). The UI shows when the code overrode Jev.
 - **Thresholds are policy, not model output.** `POLICY` in [src/verdict.js](src/verdict.js) sets escalate at `noul >= 0.2` and a human-review band from `0.1`. See below for why 0.2.
-- **No database, no accounts.** Stateless Worker. The API key exists only as a Worker secret; upstream error bodies are never forwarded.
+- **No accounts.** The assessment path is a stateless Worker; a Durable Object holds only reviewer votes. The API key exists only as a Worker secret; upstream error bodies are never forwarded.
 - **Runs without a key.** With no `TYPESAFE_API_KEY` the Worker uses a keyword stand-in and the UI shows a "mock mode" badge, so a clone works immediately. Mock numbers are never used in the report.
 
 ## Results (real Jev `jev-1.13.0`)
@@ -69,6 +72,26 @@ Read this carefully:
 - The LLMs' escalation precision is 100%, higher than Jev's 63%. Jev's escalation is tuned toward recall.
 - Fairness caveat: this is one untuned prompt and low reasoning effort. A better prompt or higher reasoning effort would likely close part of the gap, at more cost and latency. Jev's escalation cut-off was tuned on the first 30 updates, and Jev's numbers include the code rules. Treat this as a first comparison, not a leaderboard.
 
+## Closing the loop: reviewer votes
+
+The escalation threshold above was tuned on updates I wrote and labelled myself, which is the weakest part of the
+evidence. The live site asks every visitor **“was this call right?”** and records the vote against what Jev actually
+answered, so the threshold can be re-tuned on human judgements instead of mine.
+
+- The Worker signs each result into a **receipt** (HMAC-SHA256 over the verdict and Jev's probabilities, see
+  [src/receipt.js](src/receipt.js)). The browser hands the receipt back with the vote, so a vote can never claim a
+  verdict Jev did not produce, and the server never has to trust client-sent model output.
+- Votes land in a **Durable Object with SQLite** ([src/feedback.js](src/feedback.js)). Only feedback submissions reach
+  it, never assessments, so a single instance is the right coordination atom at this volume.
+- **The pasted update is not stored** unless the reviewer explicitly ticks the opt-in box. A vote without it still
+  records the verdict, the probabilities and the comment — enough to re-tune a threshold, without holding other
+  people's internal status text by default.
+- `GET /api/stats` returns the public tally. The same endpoint with the owner's bearer token returns the rows,
+  including comments.
+
+Once enough votes are in, the sweep in [docs/THRESHOLDS.md](docs/THRESHOLDS.md) gets re-run against real labels and
+the policy moves. That re-tune, not the current 0.2, is the point of shipping this.
+
 ## What I learned about Jev
 
 1. **Jev under-calls severity.** Alone it labeled 7 of 12 truly-red updates *yellow*. The `escalate` noul carried the signal better than the `health` choice.
@@ -97,8 +120,11 @@ node evals/failure-modes.mjs     # probes of Jev's weak spots
 npm run bench -- https://<your-url> 20
 ```
 
+Deployed secrets: `TYPESAFE_API_KEY` (required for real Jev) and `FEEDBACK_SECRET` (a random 32-byte hex string;
+signs receipts and guards the owner-only endpoints). Set each with `npx wrangler secret put <NAME>`.
+
 Deploy: `npx wrangler deploy`, then `npx wrangler secret put TYPESAFE_API_KEY` (paste the value at the prompt). Never commit `.dev.vars`.
 
 ## Next
 
-Re-tuned threshold on real reviewer feedback · a previous-update field so slippage is measured as a delta · a tuned-prompt LLM baseline to test how much of the gap is prompting · a CLI / GitHub Action so it runs where updates already live.
+Re-tune the threshold once reviewer votes accumulate · a previous-update field so slippage is measured as a delta · a tuned-prompt LLM baseline to test how much of the gap is prompting · a CLI / GitHub Action so it runs where updates already live.
