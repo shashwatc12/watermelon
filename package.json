@@ -1,13 +1,17 @@
 {
-  "name": "program-health-console",
+  "name": "watermelon",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "test": "node --test tests/core.test.mjs",
+    "eval": "node evals/run.mjs",
+    "eval:mock": "node evals/run.mjs --mock",
     "bench": "node scripts/bench.mjs"
   },
   "devDependencies": {
     "wrangler": "^4"
-  }
+  },
+  "type": "module"
 }

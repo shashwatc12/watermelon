@@ -3,27 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Program Health Console</title>
-<meta name="description" content="Paste a weekly program status update. Jev returns red/yellow/green, blocked, slipped, escalate and dominant risk, with probabilities.">
+<title>Watermelon</title>
+<meta name="description" content="Green on the outside, red on the inside. Paste a weekly status update and Jev checks whether the status label matches the facts.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍉</text></svg>">
 <style>
   :root {
     --bg: #f7f6f2; --panel: #fff; --ink: #1b1b18; --muted: #6b6a63; --line: #e2e0d8;
-    --green: #2f7d4f; --yellow: #b7791f; --red: #c0392b; --accent: #23408e;
+    --green: #2f7d4f; --yellow: #b7791f; --red: #c0392b; --grey: #8a8980; --accent: #23408e;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #141412; --panel: #1d1d1a; --ink: #eeede6; --muted: #a09f96; --line: #33322d;
-      --green: #58b47c; --yellow: #e0a84a; --red: #ee6b5c; --accent: #8fa8f0;
+      --green: #58b47c; --yellow: #e0a84a; --red: #ee6b5c; --grey: #8a8980; --accent: #8fa8f0;
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); margin: 0 0 24px; }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 24px; max-width: 62ch; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  textarea { width: 100%; min-height: 170px; resize: vertical; padding: 12px; border-radius: 8px;
+  textarea { width: 100%; min-height: 150px; resize: vertical; padding: 12px; border-radius: 8px;
     border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
   button { font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
@@ -32,110 +33,172 @@
   button:disabled { opacity: .55; cursor: wait; }
   .grow { flex: 1; }
   .count { color: var(--muted); font-size: 13px; }
+  .samples { color: var(--muted); font-size: 13px; }
   #out { margin-top: 20px; }
-  .health { display: flex; align-items: center; gap: 14px; }
-  .dot { width: 44px; height: 44px; border-radius: 50%; flex: none; }
-  .health h2 { margin: 0; font-size: 22px; text-transform: capitalize; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
-  .cell { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .check { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
+  .side { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--panel); }
+  .side small { display: block; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-size: 12px; }
+  .status { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 24px; font-weight: 700; text-transform: capitalize; }
+  .dot { width: 26px; height: 26px; border-radius: 50%; background: var(--grey); flex: none; transition: background .5s; }
+  .dot.green { background: var(--green); } .dot.yellow { background: var(--yellow); } .dot.red { background: var(--red); }
+  .arrow { align-self: center; font-size: 22px; color: var(--muted); }
+  .banner { margin-top: 12px; padding: 12px 16px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); background: var(--panel); }
+  .banner.wm { border-color: var(--red); color: var(--red); }
+  .banner.ok { border-color: var(--green); color: var(--green); }
+  .banner span { display: block; font-weight: 400; color: var(--muted); margin-top: 2px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 16px; }
+  .cell { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel); }
   .cell b { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .cell span { font-size: 18px; font-weight: 600; }
+  .cell .v { font-size: 18px; font-weight: 600; }
+  .cell .q { color: var(--muted); font-size: 12px; margin-top: 4px; }
   .bar { height: 8px; border-radius: 4px; background: var(--line); margin: 6px 0 2px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--accent); }
-  .prob { font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
-  .meta { margin-top: 16px; color: var(--muted); font-size: 13px; }
+  .prob { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  .strip { margin-top: 16px; display: flex; gap: 8px 20px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  .strip strong { color: var(--ink); }
   .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--yellow); color: #fff; font-size: 12px; }
   .err { color: var(--red); margin-top: 12px; }
   footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
   a { color: var(--accent); }
+  @media (max-width: 560px) { .check { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>Program Health Console</h1>
-  <p class="sub">Paste a weekly status update. <a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> makes five typed decisions on it in one call.</p>
+  <h1>🍉 Watermelon</h1>
+  <p class="sub">Green on the outside, red on the inside. Paste a weekly status update. <a href="https://madewithjev.com" target="_blank" rel="noopener">Jev</a> answers six typed questions in one call and checks whether the status label matches the facts.</p>
 
   <div class="panel">
     <textarea id="state" maxlength="4000" placeholder="Paste a weekly status update, or pick a sample below."></textarea>
     <div class="row">
-      <button class="primary" id="go">Assess</button>
-      <span class="count" id="count">0 / 4000</span>
+      <button class="primary" id="go">Check it</button>
+      <span class="samples">Samples:</span>
+      <span id="samples" class="row" style="margin:0"></span>
       <span class="grow"></span>
-      <span class="count">Samples (synthetic):</span>
-      <span id="samples"></span>
+      <span class="count" id="count">0 / 4000</span>
     </div>
-    <div class="err" id="err" hidden></div>
   </div>
 
-  <div id="out"></div>
+  <div id="err" class="err" role="alert"></div>
+  <div id="out" hidden>
+    <div class="check">
+      <div class="side"><small>What the update claims</small><div class="status"><span class="dot" id="claimDot"></span><span id="claimTxt"></span></div></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="side"><small>What the facts support</small><div class="status"><span class="dot" id="realDot"></span><span id="realTxt"></span></div></div>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div class="grid" id="grid"></div>
+    <div class="strip" id="strip"></div>
+  </div>
 
-  <footer>Samples are invented. Do not paste confidential updates: text is sent to a third-party model API. Source on GitHub.</footer>
+  <footer>
+    Code reads the numbers (lateness, claimed label); Jev reads the language. Escalation thresholds are policy, set from a labeled eval. Do not paste confidential text; samples are synthetic.
+    <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source and eval</a>.
+  </footer>
 </main>
-
 <script>
 const SAMPLES = {
-  "On track": "Week 12: Checkout redesign is on track for the Oct 14 launch. QA signed off on payments and accessibility. No open blockers. Design and eng are aligned on the final copy. Next week: staged rollout to 5% of traffic.",
-  "Dependency": "Week 9: Search migration is waiting on the platform team to finish the new index cluster. They committed to Sept 30 but have not confirmed capacity. We can start integration tests in parallel, but the cutover date of Oct 21 is at risk if the cluster slips again.",
-  "Slipping": "Week 15: We missed the beta milestone. Two engineers were pulled onto the outage response and the API latency regression is still unresolved. Launch will move from Nov 3 to late Nov at best. Need a decision on whether to cut the reporting module or add contractors.",
-  "Scope": "Week 6: Sales asked for SSO and audit logs in v1, which were not in the original requirements. Product and legal disagree on who owns the audit spec. Engineering estimates this adds five weeks. Nobody has decided whether the date or the scope moves."
+  "Honest green": "Status: green. Week 3 of Atlas onboarding. Demo shipped Tuesday to the pilot team, all milestones on schedule, team fully staffed. No open risks.",
+  "Vendor watermelon": "Status: green. Team is confident. The vendor security review is still pending, about 3 weeks behind the original plan, but we expect it to land soon. Launch is still targeting Nov 4.",
+  "Quiet outage": "Status: yellow. There was a short payments incident on Tuesday with some checkout failures. Investigation is ongoing. We are keeping an eye on it.",
+  "Honest red": "Status: red. The API migration is blocked on the vendor security review, which is now 3 weeks late. The launch date of Nov 4 cannot hold. We need an executive to escalate with the vendor.",
+  "Nothing new": "Status: green. Nothing new this week.",
+};
+const $ = (id) => document.getElementById(id);
+const state = $("state");
+const ACTION = {
+  escalate: ["Escalate", "Escalation probability is above the policy line."],
+  human_review: ["Human review", "Uncertain: not enough signal to escalate, too much to ignore."],
+  no_action: ["No action needed", "Escalation probability is below the review line."],
 };
 
-const $ = (id) => document.getElementById(id);
-const ta = $("state");
-ta.addEventListener("input", () => $("count").textContent = ta.value.length + " / 4000");
 for (const [name, text] of Object.entries(SAMPLES)) {
   const b = document.createElement("button");
   b.textContent = name;
-  b.onclick = () => { ta.value = text; ta.dispatchEvent(new Event("input")); };
-  $("samples").appendChild(b);
+  b.onclick = () => { state.value = text; count(); };
+  $("samples").append(b);
 }
+function count() { $("count").textContent = `${state.value.length} / 4000`; }
+state.addEventListener("input", count);
 
-const COLORS = { green: "var(--green)", yellow: "var(--yellow)", red: "var(--red)" };
-const pct = (n) => Math.round(n * 100) + "%";
-const yn = (v) => (v >= 0.5 ? "Yes" : "No");
-
-function probBars(a) {
-  return Object.entries(a.probabilities || {})
-    .sort((x, y) => y[1] - x[1])
-    .map(([k, v]) => `<div class="prob"><span>${k}</span><span>${pct(v)}</span></div>
-      <div class="bar"><i style="width:${pct(v)}"></i></div>`).join("");
-}
-
-function render(r) {
-  const a = r.answers, h = a.health, m = r.meta;
-  const cell = (label, val, extra = "") => `<div class="cell"><b>${label}</b><span>${val}</span>${extra}</div>`;
-  const noul = (label, q) => cell(label, yn(q.noul), `<div class="prob"><span>confidence</span><span>${pct(q.noul >= 0.5 ? q.noul : 1 - q.noul)}</span></div>`);
-  $("out").innerHTML = `<div class="panel">
-    <div class="health"><div class="dot" style="background:${COLORS[h.choice] || "var(--muted)"}"></div>
-      <div><div class="count">Program health</div><h2>${h.choice}</h2></div></div>
-    <div style="margin-top:12px">${probBars(h)}</div>
-    <div class="grid">
-      ${noul("Blocked", a.blocked)}
-      ${noul("Date slipped", a.slipped)}
-      ${noul("Escalate", a.escalate)}
-      ${cell("Dominant risk", a.risk.choice, probBars(a.risk))}
-    </div>
-    <div class="meta">${m.latencyMs} ms round trip · $${m.costUsd.toFixed(6)} · ${r.usage.input_tokens} input tokens
-      ${m.mock ? ' · <span class="badge">mock mode: no Jev call</span>' : ""}</div>
-  </div>`;
-}
-
-$("go").onclick = async () => {
-  $("err").hidden = true;
-  const state = ta.value.trim();
-  if (!state) { $("err").textContent = "Paste an update or pick a sample."; $("err").hidden = false; return; }
-  $("go").disabled = true; $("go").textContent = "Assessing…";
-  try {
-    const res = await fetch("/api/assess", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Request failed");
-    render(data);
-  } catch (e) {
-    $("err").textContent = e.message; $("err").hidden = false;
-  } finally {
-    $("go").disabled = false; $("go").textContent = "Assess";
+function cell(label, value, prob, note) {
+  const d = document.createElement("div"); d.className = "cell";
+  const b = document.createElement("b"); b.textContent = label;
+  const v = document.createElement("div"); v.className = "v"; v.textContent = value;
+  d.append(b, v);
+  if (prob != null) {
+    const bar = document.createElement("div"); bar.className = "bar";
+    const i = document.createElement("i"); i.style.width = `${Math.round(prob * 100)}%`; bar.append(i);
+    d.append(bar);
   }
-};
+  if (note) { const q = document.createElement("div"); q.className = "q"; q.textContent = note; d.append(q); }
+  return d;
+}
+const pctTxt = (p) => `${Math.round(p * 100)}%`;
+function topProbs(a) {
+  return Object.entries(a.probabilities).sort((x, y) => y[1] - x[1]).slice(0, 3)
+    .map(([k, p]) => `${k} ${pctTxt(p)}`).join(" · ");
+}
+function setDot(dot, txt, status) {
+  dot.className = `dot ${status || ""}`;
+  txt.textContent = status || "not stated";
+}
+
+async function run() {
+  $("err").textContent = "";
+  const text = state.value.trim();
+  if (!text) { $("err").textContent = "Paste an update or pick a sample."; return; }
+  const btn = $("go"); btn.disabled = true; btn.textContent = "Checking…";
+  try {
+    const res = await fetch("/api/assess", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state: text }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+    render(d);
+  } catch (e) { $("err").textContent = e.message; $("out").hidden = true; }
+  finally { btn.disabled = false; btn.textContent = "Check it"; }
+}
+
+function render(d) {
+  const { answers: a, verdict: v, facts, meta } = d;
+  $("out").hidden = false;
+  setDot($("claimDot"), $("claimTxt"), v.claimed);
+  // Show the claim first, then flip to the facts so the disagreement is visible.
+  setDot($("realDot"), $("realTxt"), null); $("realTxt").textContent = "…";
+  setTimeout(() => setDot($("realDot"), $("realTxt"), v.actual === "unclear" ? null : v.actual), 350);
+  if (v.actual === "unclear") $("realTxt").textContent = "unclear";
+
+  const banner = $("banner");
+  const [title, why] = ACTION[v.action];
+  banner.className = `banner ${v.watermelon ? "wm" : "ok"}`;
+  banner.replaceChildren(document.createTextNode(
+    (v.watermelon ? `🍉 Watermelon: claims ${v.claimed}, facts say ${v.actual}. ` : v.claimed ? "Label matches the facts. " : "No status label found. ") + `Action: ${title}.`));
+  const sub = document.createElement("span");
+  sub.textContent = why + (v.floorApplied ? ` Code raised health to ${v.floorApplied} because the text states ${facts.latenessDays} days of lateness.` : "");
+  banner.append(sub);
+
+  const g = $("grid"); g.replaceChildren(
+    cell("Health (Jev)", `${a.health.choice} · ${pctTxt(a.health.confidence)} confident`, a.health.probabilities[a.health.choice], topProbs(a.health)),
+    cell("Escalate (noul)", pctTxt(a.escalate.noul), a.escalate.noul, "P(yes). Policy escalates at 20%: Jev's noul runs low."),
+    cell("Blocked (noul)", pctTxt(a.blocked.noul), a.blocked.noul),
+    cell("Slipped (noul)", pctTxt(a.slipped.noul), a.slipped.noul),
+    cell("Spin (score 0–2)", (a.spin.score ?? 0).toFixed(2), (a.spin.score ?? 0) / 2, "0 candid · 1 softened · 2 downplayed"),
+    cell("Dominant risk", `${a.risk.choice} · ${pctTxt(a.risk.confidence)}`, a.risk.probabilities?.[a.risk.choice] ?? a.risk.confidence, a.risk.probabilities ? topProbs(a.risk) : ""),
+  );
+
+  const s = $("strip"); s.replaceChildren();
+  const add = (label, val) => { const e = document.createElement("span"); e.append(label + " "); const st = document.createElement("strong"); st.textContent = val; e.append(st); s.append(e); };
+  if (meta.mock) { const m = document.createElement("span"); m.className = "badge"; m.textContent = "mock mode: no Jev call made"; s.append(m); }
+  add("6 judgments in 1 call ·", `${meta.latencyMs} ms`);
+  add("tokens", String(meta.inputTokens));
+  add("cost", `$${meta.costUsd.toFixed(6)}`);
+  add("model", d.model);
+  if (facts.latenessDays) add("lateness parsed by code", `${facts.latenessDays} days`);
+}
+$("go").onclick = run;
+// Shareable deep link: /?sample=Vendor%20watermelon runs that sample immediately.
+const q = new URLSearchParams(location.search).get("sample");
+if (q && SAMPLES[q]) { state.value = SAMPLES[q]; count(); run(); }
+state.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
 </script>
 </body>
 </html>

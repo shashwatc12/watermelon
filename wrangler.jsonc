@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "program-health-console",
+  "name": "watermelon",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "observability": { "enabled": true },

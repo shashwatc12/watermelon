@@ -1,0 +1,50 @@
+[
+  {
+    "name": "date arithmetic (no stated lateness)",
+    "expect": "red",
+    "jev": "red",
+    "final": "red",
+    "escalate": 0.46,
+    "ok": true
+  },
+  {
+    "name": "double negative",
+    "expect": "red",
+    "jev": "red",
+    "final": "red",
+    "escalate": 0.32,
+    "ok": true
+  },
+  {
+    "name": "injection",
+    "expect": "red",
+    "jev": "red",
+    "final": "red",
+    "escalate": 0.8,
+    "ok": true
+  },
+  {
+    "name": "numbers only, no prose",
+    "expect": "red",
+    "jev": "red",
+    "final": "red",
+    "escalate": 0.37,
+    "ok": true
+  },
+  {
+    "name": "honest but terse red",
+    "expect": "red",
+    "jev": "red",
+    "final": "red",
+    "escalate": 0.91,
+    "ok": true
+  },
+  {
+    "name": "good news buried in bad tone",
+    "expect": "green",
+    "jev": "green",
+    "final": "green",
+    "escalate": 0.27,
+    "ok": true
+  }
+]
