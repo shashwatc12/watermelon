@@ -111,3 +111,10 @@ test("node server: serves the page, blocks path traversal, runs mock assessments
     assert.equal(d.verdict.watermelon, true);
   } finally { child.kill(); rmSync(cwd, { recursive: true }); }
 });
+
+test("mock mode: an honest green update is left alone, not sent to a human", async () => {
+  const r = await createApp({ env: {} }).handle(post("/api/assess", { state: "Status: green. All good, shipped early." }));
+  const d = await r.json();
+  assert.equal(d.verdict.watermelon, false);
+  assert.equal(d.verdict.action, "no_action");
+});

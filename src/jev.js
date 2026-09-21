@@ -43,9 +43,9 @@ export function mockAnswers(text) {
     model: "mock",
     answers: {
       health: { type: "choice", choice: health, confidence: 0.9, probabilities: p },
-      blocked: { type: "noul", noul: has("blocked", "waiting on", "dependency") ? 0.9 : 0.1 },
-      slipped: { type: "noul", noul: has("slip", "missed", "delay", "pushed") ? 0.9 : 0.1 },
-      escalate: { type: "noul", noul: health === "red" ? 0.8 : 0.1 },
+      blocked: { type: "noul", noul: has("blocked", "waiting on", "dependency") ? 0.9 : 0.03 },
+      slipped: { type: "noul", noul: has("slip", "missed", "delay", "pushed") ? 0.9 : 0.03 },
+      escalate: { type: "noul", noul: health === "red" ? 0.8 : health === "yellow" ? 0.05 : 0.02 }, // below the review band unless red
       spin: { type: "score", score: spinScore, confidence: 0.5 },
       risk: { type: "choice", choice: riskKey, confidence: 0.9, probabilities: r },
     },
