@@ -93,35 +93,42 @@ Labels were written from scenario facts *before* the text was rendered, never fr
 
 Six extra probes of Jev's documented weak spots (date arithmetic, double negative, prompt injection, numbers-only prose, terse red, good news in a bad tone) all came out right ([evals/failure-modes.json](evals/failure-modes.json)). Six probes is a smoke test, not a proof. Live deployment check (10 sequential requests): p50 175 ms, p95 276 ms, about $0.000028 per request.
 
-### Jev vs an LLM, live in the app
+### Jev vs the best free Groq model, live in the app
 
-After any result, **Compare with gpt-oss** runs the same update through Groq-hosted `gpt-oss-120b` and `gpt-oss-20b` and shows, next to Jev: what each says the facts support on its own, the verdict with the same code rules applied, escalation, latency, tokens, cost per update and cost per 1,000. Two rows are shown deliberately: on the sample vendor update the LLMs alone accept the "green" label and Jev does not, but once the same code rules are applied all three catch it. Showing only the first row would overstate Jev's edge.
+After any result, **Compare with Qwen3.8-27B** runs the same update through the strongest model on Groq's free tier that we tested, and shows, next to Jev: what it says the facts support on its own, the verdict with the same code rules applied, escalation, latency, tokens, cost per update and cost per 1,000. Two verdict rows are shown deliberately, so the comparison can't flatter Jev.
 
-It is opt-in: the update text is sent to a third party (Groq) only when you click, and the button says so. It is off unless `GROQ_API_KEY` is set (locally or as a deploy secret) and is rate-limited to 4 requests a minute per address; Groq's free tier is about 8k tokens a minute across all visitors, so it may say "busy". The prompt and prices are shared with the eval script ([src/llm.js](src/llm.js)), so the live comparison and the published numbers cannot drift apart.
+It is opt-in: the update text is sent to a third party (Groq) only when you click, and the button says so. It is off unless `GROQ_API_KEY` is set (locally or as a deploy secret) and is rate-limited to 4 requests a minute per address; Groq's free tier caps tokens per minute across all visitors, so it may say "busy". The prompt and prices are shared with the eval script ([src/llm.js](src/llm.js)), so the live comparison and the published numbers cannot drift apart. "Free" refers to Groq's free tier; costs shown are Groq's published on-demand prices, which is what you would pay at volume.
 
-### Jev vs an LLM (same 50 updates)
+**How the opponent was chosen.** Groq's model list has three text models that suit this task: `gpt-oss-120b`, `gpt-oss-20b` and `qwen/qwen3.8-27b` (the rest are speech, safety classifiers, or tool-using agent systems). All three ran on the same 50 labelled updates and the best one is the live opponent. That is Qwen, not the gpt-oss models I originally compared against.
 
-Same labelled updates, same six questions, one call each. LLMs are Groq-hosted `gpt-oss` models at temperature 0, JSON mode, low reasoning effort, one plain-language prompt ([evals/compare.mjs](evals/compare.mjs)). Latency is wall clock from a laptop; cost uses Groq's published prices.
+### Jev vs Groq models (same 50 updates)
+
+Same labelled updates, same six questions, one call each ([evals/compare.mjs](evals/compare.mjs)). LLMs at temperature 0 in JSON mode with one plain-language prompt; gpt-oss at low reasoning effort, Qwen in non-thinking mode (thinking makes it fail JSON validation on Groq). Latency is wall clock from a laptop; cost uses Groq's published prices.
 
 | System | Health acc | Watermelons caught | False alarms | Escalate precision / recall | p50 / p95 ms | Cost per 1,000 |
 |---|---|---|---|---|---|---|
 | Jev (jev-1.13.0) + code rules | 77% | 11/13 | 0/34 | 63% / 83% | 142 / 286 | $0.0272 |
-| openai/gpt-oss-120b (LLM alone) | 66% | 1/13 | 0/34 | 100% / 50% | 443 / 616 | $0.0984 |
-| openai/gpt-oss-120b + code rules | 72% | 3/13 | 0/34 | 100% / 50% | 443 / 616 | $0.0984 |
-| openai/gpt-oss-20b (LLM alone) | 68% | 0/13 | 0/34 | 100% / 44% | 308 / 412 | $0.0441 |
-| openai/gpt-oss-20b + code rules | 74% | 3/13 | 0/34 | 100% / 44% | 308 / 412 | $0.0441 |
+| openai/gpt-oss-120b (LLM alone) | 68% | 2/13 | 0/34 | 100% / 56% | 534 / 838 | $0.0979 |
+| openai/gpt-oss-120b + code rules | 74% | 4/13 | 0/34 | 100% / 56% | 534 / 838 | $0.0979 |
+| openai/gpt-oss-20b (LLM alone) | 68% | 1/13 | 0/34 | 100% / 50% | 341 / 636 | $0.0440 |
+| openai/gpt-oss-20b + code rules | 74% | 4/13 | 0/34 | 100% / 50% | 341 / 636 | $0.0440 |
+| qwen/qwen3.8-27b (LLM alone) | 83% | 9/13 | 0/34 | 100% / 50% | 211 / 341 | $0.3132 |
+| qwen/qwen3.8-27b + code rules | 85% | 9/13 | 0/34 | 100% / 50% | 211 / 341 | $0.3132 |
 
-- Jev catches 11 of 13 watermelons. The LLMs catch 0 to 3, even with the same code rules: they rarely disagree with an author's "green" and they under-escalate (44 to 50% recall), though with no false alarms.
-- Jev was about 2 to 3 times faster and 1.6 to 3.6 times cheaper per update. The LLMs' escalation precision (100%) beats Jev's (63%): Jev's cut-off is tuned toward recall.
-- **Fairness caveat:** one untuned prompt at low reasoning effort. A better prompt would likely close part of the gap, at more cost and latency. Jev's cut-off was tuned on the first 30 updates, and its numbers include the code rules. A first comparison, not a leaderboard.
+- **Jev is not the most accurate option.** Qwen3.8-27B beat it on overall health accuracy (83% alone, 85% with the code rules, against Jev's 77%), with 100% escalation precision against Jev's 63%.
+- **Jev wins on cost, speed and recall.** About 11 times cheaper than Qwen ($0.027 vs $0.313 per 1,000), 1.5 times faster at p50 (142 vs 211 ms), 11 of 13 watermelons caught against Qwen's 9, and 83% escalation recall against 50%.
+- **An earlier version of this README said the LLMs "catch 0 to 3" watermelons. That was true of the gpt-oss models and misleading about LLMs in general,** because I had picked weak opponents. It is corrected here.
+- **Noise:** temperature 0 is not deterministic on Groq. `gpt-oss-120b` caught 1 watermelon alone in one run and 2 in the next. Differences of one or two out of 13 are within that noise.
+- **Caveats:** one untuned prompt per model, Jev's escalation cut-off was tuned on the first 30 updates, and Jev's numbers include the code rules. A first comparison, not a leaderboard.
 
 ### What I learned about Jev
 
 1. **Jev under-calls severity.** Alone it labelled 7 of 12 truly-red updates *yellow*. The `escalate` noul carried the signal better than the `health` choice.
 2. **noul probabilities run low.** Escalation-worthy updates often scored 0.2-0.3, not 0.9. A naive 0.5 cut-off would have missed 6 of 11. The sweep puts the cost-minimising cut-off at 0.1-0.2, so policy uses 0.2 with a review band below it.
 3. **Calibration is decent at the extremes.** In the pooled escalate and blocked bins, "0.8-1.0" was right 10/10 and "0.0-0.2" was right 32/33. The middle is sparse and noisy at n=30.
-4. **One call, six judgments is nearly free.** Output is free and input is $0.042 per million tokens, so a sixth question costs a rounding error. The design leans on that: many narrow questions, not one broad one.
-5. **The `spin` score separates the classes weakly** (mean 1.06 on watermelons vs 0.44 on honest updates). A useful signal to show, not something to threshold on.
+4. **Jev is not the most accurate model available, and does not need to be.** A 27B general model beat it on overall health accuracy. Jev's case is 11 times lower cost, lower latency, per-question probabilities to threshold on, and higher escalation recall.
+5. **One call, six judgments is nearly free.** Output is free and input is $0.042 per million tokens, so a sixth question costs a rounding error. The design leans on that: many narrow questions, not one broad one.
+6. **The `spin` score separates the classes weakly** (mean 1.06 on watermelons vs 0.44 on honest updates). A useful signal to show, not something to threshold on.
 
 ## Closing the loop: reviewer votes
 
@@ -146,7 +153,7 @@ The threshold above was tuned on updates I wrote and labelled myself, which is t
 |---|---|
 | `src/app.js` | The portable app: routes, rate limit, receipts, votes |
 | `src/jev.js`, `extract.js`, `verdict.js`, `questions.js` | Jev call, fact extraction, policy, the six questions |
-| `src/llm.js` | The opt-in comparison arm (Groq gpt-oss): shared prompt, prices, parallel calls |
+| `src/llm.js` | The opt-in comparison arm (Groq models): candidates, shared prompt, prices |
 | `server.js`, `bin/watermelon.js` | Node host and CLI (zero dependencies) |
 | `src/worker.js`, `src/feedback.js`, `wrangler*.jsonc` | Cloudflare host (optional) |
 | `evals/` | Labelled sets, runner, held-out run, Jev-vs-LLM comparison, failure probes |

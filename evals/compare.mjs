@@ -6,7 +6,7 @@ import { DATASET } from "./dataset.mjs";
 import { HOLDOUT } from "./holdout.mjs";
 import { extractFacts } from "../src/extract.js";
 import { verdict } from "../src/verdict.js";
-import { LLM_MODELS, PROMPT } from "../src/llm.js";
+import { CANDIDATES, PROMPT } from "../src/llm.js";
 
 const loadKey = (name) => {
   if (process.env[name]) return process.env[name];
@@ -16,7 +16,7 @@ const loadKey = (name) => {
 const key = loadKey("GROQ_API_KEY");
 if (!key) { console.error("No GROQ_API_KEY."); process.exit(1); }
 
-const MODELS = LLM_MODELS;
+const MODELS = CANDIDATES;
 const SET = [...DATASET, ...HOLDOUT];
 const TPM_BUDGET = 6500; // free tier is ~8k tokens/minute; leave headroom
 const RANK = { green: 0, yellow: 1, red: 2 };
@@ -27,7 +27,7 @@ async function ask(model, text) {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-      body: JSON.stringify({ model: model.id, temperature: 0, reasoning_effort: "low", max_completion_tokens: 400,
+      body: JSON.stringify({ model: model.id, temperature: 0, ...model.extra, max_completion_tokens: 400,
         response_format: { type: "json_object" }, messages: [{ role: "user", content: PROMPT + text }] }),
     });
     if (res.status === 429 && attempt < 5) { await new Promise((r) => setTimeout(r, 2000 * (attempt + 1))); continue; }
@@ -91,7 +91,7 @@ writeFileSync(new URL("compare.json", import.meta.url), JSON.stringify(results, 
 const f = (x) => `${(100 * x).toFixed(0)}%`;
 const md = `# Jev vs LLM, same ${SET.length} updates
 
-Labels as in dataset.mjs and holdout.mjs. LLMs: temperature 0, JSON mode, reasoning_effort low, one call per update, same questions in plain language. Latency is wall clock from a laptop; cost from Groq's published prices. Jev escalates at noul >= 0.2 (policy tuned on the first 30, so its escalation numbers on those are optimistic); LLMs return a boolean.
+Labels as in dataset.mjs and holdout.mjs. LLMs: temperature 0, JSON mode, one call per update, same questions in plain language; gpt-oss at reasoning_effort low, Qwen in its non-thinking mode (thinking makes it fail JSON validation on Groq). Latency is wall clock from a laptop; cost from Groq's published prices. Jev escalates at noul >= 0.2 (policy tuned on the first 30, so its escalation numbers on those are optimistic); LLMs return a boolean.
 
 | System | Health acc | Watermelons caught | False alarms | Escalate precision / recall | p50 / p95 ms | Cost per 1,000 |
 |---|---|---|---|---|---|---|

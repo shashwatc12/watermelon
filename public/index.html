@@ -247,10 +247,10 @@
 
       <div class="cmp" id="cmp" hidden>
         <p class="lead">How would another model have done?</p>
-        <p class="hint" id="cmpHint">Runs this same update through Groq-hosted gpt-oss models, with the same six judgments,
-          and shows what they answered and what it would have cost. This sends your text to Groq, so it only happens
-          when you click.</p>
-        <button id="cmpGo">Compare with gpt-oss</button>
+        <p class="hint" id="cmpHint">Runs this same update through Qwen3.8-27B, the strongest model on Groq's free tier that we tested,
+          with the same six judgments, and shows what it answered and what it would have cost. This sends your text
+          to Groq, so it only happens when you click.</p>
+        <button id="cmpGo">Compare with Qwen3.8-27B</button>
         <div id="cmpOut"></div>
       </div>
 
@@ -317,7 +317,7 @@
         <p>50 synthetic updates whose labels were written from scenario facts <b>before</b> the text existed, split
         into 30 for tuning and 20 held out. Jev plus the code rules caught <b>11 of 13</b> watermelons with
         <b>0 false alarms in 34</b> honest updates. Trusting the author’s label catches none, by construction. The
-        same 50 through Groq-hosted <code>gpt-oss</code> models caught 3 — at 2–3× the latency and 1.6–3.6× the cost.</p>
+        strongest free Groq model we tried, Qwen3.8-27B, caught 9 and was <em>more accurate</em> on overall health (85% vs 77%) — but cost about 11× as much per update. Jev’s edge is price, speed and escalation recall, not overall accuracy.</p>
       </div>
       <div class="card">
         <h3>What this does not prove</h3>
@@ -455,7 +455,7 @@ function render(d) {
   last = d;
   $("cmp").hidden = !d.compare;
   $("cmpOut").replaceChildren();
-  $("cmpGo").textContent = "Compare with gpt-oss";
+  $("cmpGo").textContent = "Compare with Qwen3.8-27B";
   receipt = d.receipt || null;
   agree = null;
   $("fb").hidden = !receipt;
@@ -545,13 +545,14 @@ function renderCompare(results) {
   const note = el("p", "cmpnote");
   const b = el("b", null, "Read this as one data point. ");
   note.append(b, document.createTextNode(
-    "The LLMs get one untuned prompt at low reasoning effort. Across the 50 labelled updates in the README, with the same code rules " +
-    "applied to everyone, Jev caught 11 of 13 watermelons and each gpt-oss model 3 of 13. Prices are Groq's published on-demand rates."));
+    "Qwen gets one untuned prompt in non-thinking mode. Across the 50 labelled updates in the README, with the same code rules " +
+    "applied to everyone, Jev caught 11 of 13 watermelons and Qwen 9 of 13. Qwen was more accurate on overall health (85% vs 77%); " +
+    "Jev was about 11× cheaper and 1.5× faster at the median. Single calls vary a lot, so any one row here can disagree with that. Prices are Groq's published on-demand rates."));
   out.append(note);
 }
 
 $("cmpGo").onclick = async () => {
-  const btn = $("cmpGo"); btn.disabled = true; btn.textContent = "Asking gpt-oss…";
+  const btn = $("cmpGo"); btn.disabled = true; btn.textContent = "Asking Qwen…";
   $("cmpOut").replaceChildren();
   try {
     const res = await fetch("/api/compare", { method: "POST", headers: { "content-type": "application/json" },
@@ -562,7 +563,7 @@ $("cmpGo").onclick = async () => {
     btn.textContent = "Run again";
   } catch (e) {
     $("cmpOut").replaceChildren(el("div", "err", e.message));
-    btn.textContent = "Compare with gpt-oss";
+    btn.textContent = "Compare with Qwen3.8-27B";
   } finally { btn.disabled = false; }
 };
 

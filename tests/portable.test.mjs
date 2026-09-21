@@ -120,7 +120,7 @@ test("mock mode: an honest green update is left alone, not sent to a human", asy
 });
 
 // --- live comparison arm ---
-import { compareModels, llmCost, LLM_MODELS } from "../src/llm.js";
+import { compareModels, llmCost, LLM_MODELS, CANDIDATES } from "../src/llm.js";
 
 const groqReply = (content, usage = { prompt_tokens: 400, completion_tokens: 100 }) =>
   async () => new Response(JSON.stringify({ choices: [{ message: { content } }], usage }), { status: 200 });
@@ -145,7 +145,7 @@ test("comparison: one model failing (429) does not sink the other", async () => 
   const flaky = async () => (n++ === 0
     ? new Response("{}", { status: 429 })
     : new Response(JSON.stringify({ choices: [{ message: { content: '{"health":"red"}' } }], usage: {} }), { status: 200 }));
-  const rs = await compareModels("x", "k", flaky);
+  const rs = await compareModels("x", "k", flaky, CANDIDATES.slice(0, 2));
   assert.deepEqual(rs.map((r) => r.ok).sort(), [false, true]);
   assert.equal(rs.find((r) => !r.ok).error, "busy");
 });
@@ -157,7 +157,8 @@ test("/api/compare is off without a Groq key, and the compare flag follows the k
   const a = await (await on.handle(post("/api/assess", { state: "Status: green. Fine." }))).json();
   assert.equal(a.compare, true);
   const c = await (await on.handle(post("/api/compare", { state: "Status: green. Fine." }))).json();
-  assert.equal(c.results.length, 2);
+  assert.equal(c.results.length, LLM_MODELS.length);
+  assert.equal(c.results[0].model, "qwen3.8-27b");
   assert.equal((await off.handle(post("/api/assess", { state: "Status: green. Fine." })).then((r) => r.json())).compare, false);
 });
 test("/api/compare rejects empty and oversized input", async () => {

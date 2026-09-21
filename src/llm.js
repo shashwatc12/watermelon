@@ -1,14 +1,23 @@
 // The comparison arm: the same six judgments from a general-purpose LLM, so the app can show
-// how another model would have answered and what it would have cost. Groq-hosted gpt-oss.
+// how another model would have answered and what it would have cost. Groq-hosted models.
 // Prices are Groq's published on-demand prices (console.groq.com/docs/models).
 import { extractFacts } from "./extract.js";
 import { verdict } from "./verdict.js";
 
 export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-export const LLM_MODELS = [
-  { id: "openai/gpt-oss-120b", label: "gpt-oss-120b", inPer1M: 0.15, outPer1M: 0.60 },
-  { id: "openai/gpt-oss-20b", label: "gpt-oss-20b", inPer1M: 0.075, outPer1M: 0.30 },
+// Every text model on Groq that suits this task (checked against GET /openai/v1/models on 2026-09-21; the rest
+// are speech, safety classifiers, or Groq's tool-using compound systems). `extra` holds per-model request
+// settings: gpt-oss wants low reasoning effort, while Qwen fails JSON validation with reasoning on, so it runs
+// in its non-thinking mode.
+export const CANDIDATES = [
+  { id: "openai/gpt-oss-120b", label: "gpt-oss-120b", inPer1M: 0.15, outPer1M: 0.60, extra: { reasoning_effort: "low" } },
+  { id: "openai/gpt-oss-20b", label: "gpt-oss-20b", inPer1M: 0.075, outPer1M: 0.30, extra: { reasoning_effort: "low" } },
+  { id: "qwen/qwen3.8-27b", label: "qwen3.8-27b", inPer1M: 0.80, outPer1M: 4.00, extra: { reasoning_effort: "none" } },
 ];
+
+// What the live app compares against Jev: the best candidate, chosen by evals/compare.mjs (see evals/COMPARE.md).
+// Qwen3.8-27B scored highest on health accuracy and watermelons caught of the three, so it is the fair opponent.
+export const LLM_MODELS = CANDIDATES.filter((m) => m.id === "qwen/qwen3.8-27b");
 
 // One plain-language prompt covering the same questions Jev answers. Shared with evals/compare.mjs
 // so the live comparison and the published numbers can never drift apart.
@@ -34,7 +43,7 @@ export async function callGroq(state, apiKey, model, fetchImpl = fetch) {
     method: "POST",
     headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
     body: JSON.stringify({
-      model: model.id, temperature: 0, reasoning_effort: "low", max_completion_tokens: 400,
+      model: model.id, temperature: 0, ...model.extra, max_completion_tokens: 400,
       response_format: { type: "json_object" }, messages: [{ role: "user", content: PROMPT + state }],
     }),
   });
