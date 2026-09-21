@@ -8,7 +8,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm test
-      - run: node bin/watermelon.js /dev/stdin <<< 'Status: green. Blocked, 3 weeks late.' || test $? -eq 3
+      - name: CLI exits 3 on a watermelon
+        run: |
+          set +e
+          echo 'Status: green. Blocked, 3 weeks late.' | node bin/watermelon.js -
+          test $? -eq 3
       # Mock eval only: proves the eval harness runs. Real numbers come from `npm run eval` with a key.
       - run: npm run eval:mock > /dev/null
       - run: npx wrangler deploy --dry-run
