@@ -5,6 +5,7 @@ import { callJev, mockAnswers, costUsd } from "./jev.js";
 import { extractFacts } from "./extract.js";
 import { verdict } from "./verdict.js";
 import { sign, verify } from "./receipt.js";
+import { compareModels } from "./llm.js";
 
 export const MAX_CHARS = 4000;
 const MAX_COMMENT = 400;
@@ -47,7 +48,7 @@ export async function assessText(state, env, jev = callJev) {
  * @param {Function} [opts.jev]  override the Jev caller (tests)
  * @param {Function} [opts.serveStatic] (request) => Response, for non-API paths
  */
-export function createApp({ env, store, jev = callJev, serveStatic }) {
+export function createApp({ env, store, jev = callJev, llmFetch = fetch, serveStatic }) {
   const hits = new Map(); // best-effort per-instance limiter: a guard for a public demo, not a quota
   const limited = (ip, bucket, max = MAX_PER_WINDOW) => {
     const key = `${bucket}:${ip}`, now = Date.now();
@@ -81,7 +82,21 @@ export function createApp({ env, store, jev = callJev, serveStatic }) {
       spin: a.spin.score ?? null, health: a.health.choice, healthConf: a.health.confidence,
       risk: a.risk.choice, lateness: out.facts.latenessDays,
     }, env.FEEDBACK_SECRET);
-    return json({ ...out, receipt });
+    return json({ ...out, receipt, compare: Boolean(env.GROQ_API_KEY) && !out.meta.mock });
+  }
+
+  // Opt-in: sends the text to a third party (Groq), so it is a separate, explicit request, tightly limited.
+  async function compare(request) {
+    if (!env.GROQ_API_KEY) return json({ error: "Comparison is not enabled here." }, 503);
+    let body;
+    try { body = await request.json(); } catch { return json({ error: "Body must be JSON." }, 400); }
+    const state = typeof body?.state === "string" ? body.state.trim() : "";
+    if (!state) return json({ error: "Missing 'state' text." }, 400);
+    if (state.length > MAX_CHARS) return json({ error: `Keep it under ${MAX_CHARS} characters.` }, 413);
+    const ip = ipOf(request);
+    if (ip !== "local" && limited(ip, "compare", 4)) return json({ error: "Rate limit: try again in a minute." }, 429);
+    const results = await compareModels(state, env.GROQ_API_KEY, llmFetch);
+    return json({ results });
   }
 
   async function feedback(request) {
@@ -112,6 +127,7 @@ export function createApp({ env, store, jev = callJev, serveStatic }) {
       const { pathname } = new URL(request.url);
       if (pathname === "/api/assess" && request.method === "POST") return assess(request);
       if (pathname === "/api/feedback" && request.method === "POST") return feedback(request);
+      if (pathname === "/api/compare" && request.method === "POST") return compare(request);
       if (pathname === "/api/stats" && request.method === "GET") return stats(request);
       if (pathname === "/api/admin/reset" && request.method === "POST") {
         return isOwner(request) ? json({ ok: true, stats: await store.reset() }) : json({ error: "Not found" }, 404);

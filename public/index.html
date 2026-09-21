@@ -162,6 +162,22 @@
   .fb .done { font-size: 15px; color: var(--ink-2); }
   .tally { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
   .tally b { color: var(--ink-2); font-weight: 600; }
+  /* ---- model comparison ---- */
+  .cmp { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .cmp .lead { margin: 0 0 6px; font-size: 15px; font-weight: 550; }
+  .cmp .hint { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; max-width: 62ch; }
+  .cmptable { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cmptable table { min-width: 520px; }
+  .cmptable th:not(:first-child), .cmptable td:not(:first-child) { text-align: right; }
+  .cmptable th.jev, .cmptable td.jev { color: var(--ink); }
+  .cmptable td { font-size: 14.5px; }
+  .cmptable td.row { color: var(--ink-2); }
+  .cmptable td.row em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .cmptable tr.sep td { border-top: 1px solid #3a4a3c; }
+  .yes { color: var(--good); font-weight: 600; } .no { color: var(--critical); font-weight: 600; }
+  .mult { color: var(--muted); font-size: 12.5px; font-weight: 500; }
+  .cmpnote { margin-top: 14px; color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 66ch; }
+  .cmpnote b { color: var(--ink-2); font-weight: 600; }
   .err { color: var(--critical); margin-top: 16px; font-weight: 500; }
 
   footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line);
@@ -228,6 +244,15 @@
         <tbody id="rows"></tbody>
       </table>
       <div class="kpis" id="kpis"></div>
+
+      <div class="cmp" id="cmp" hidden>
+        <p class="lead">How would another model have done?</p>
+        <p class="hint" id="cmpHint">Runs this same update through Groq-hosted gpt-oss models, with the same six judgments,
+          and shows what they answered and what it would have cost. This sends your text to Groq, so it only happens
+          when you click.</p>
+        <button id="cmpGo">Compare with gpt-oss</button>
+        <div id="cmpOut"></div>
+      </div>
 
       <div class="fb" id="fb" hidden>
         <div class="ask" id="ask">
@@ -307,7 +332,7 @@
   <footer>
     Code reads the numbers (the claimed label, “3 weeks late” → days); Jev reads the language. Escalation thresholds are
     policy, set from a labelled eval, not model output. Your update is not stored unless you tick the box when leaving
-    feedback; votes are recorded without it. Samples are synthetic — please don’t paste anything confidential. <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source, eval and method</a>.
+    feedback; votes are recorded without it. The optional model comparison sends your text to Groq, and only when you click it. Samples are synthetic — please don’t paste anything confidential. <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source, eval and method</a>.
   </footer>
 </main>
 
@@ -427,6 +452,10 @@ function render(d) {
   $("seedTitle").textContent = v.floorApplied
     ? "Jev’s health distribution — before code raised it to " + v.floorApplied
     : "Jev’s health distribution";
+  last = d;
+  $("cmp").hidden = !d.compare;
+  $("cmpOut").replaceChildren();
+  $("cmpGo").textContent = "Compare with gpt-oss";
   receipt = d.receipt || null;
   agree = null;
   $("fb").hidden = !receipt;
@@ -453,6 +482,89 @@ function render(d) {
   $("over").style.display = "";
   requestAnimationFrame(() => requestAnimationFrame(() => slice.classList.add("cut")));
 }
+
+// ---- model comparison ----
+const RANK = { green: 0, yellow: 1, red: 2 };
+let last = null; // the most recent Jev result, so the comparison uses exactly what is on screen
+
+const fmtMs = (n) => `${Math.round(n)} ms`;
+const usd = (n) => (n < 0.0001 ? `$${n.toFixed(6)}` : `$${n.toFixed(5)}`);
+const per1000 = (n) => `$${n.toFixed(n < 1 ? 3 : 2)}`;
+const mult = (n, base) => (base > 0 ? ` ${(n / base).toFixed(1)}× Jev` : "");
+
+function verdictCell(actual, wm) {
+  const c = el("span");
+  c.append(document.createTextNode(actual + " "));
+  const tag = el("span", wm ? "yes" : "no", wm ? "catches it" : "misses it");
+  c.append(tag);
+  return c;
+}
+
+function renderCompare(results) {
+  const { answers: a, verdict: v, meta } = last;
+  const out = $("cmpOut"); out.replaceChildren();
+  const jevAloneWm = Boolean(v.claimed) && RANK[a.health.choice] > RANK[v.claimed];
+  const cols = [
+    { name: "Jev", jev: true, alone: verdictCell(a.health.choice, jevAloneWm), rules: verdictCell(v.actual, v.watermelon),
+      esc: pct(a.escalate.noul), ms: fmtMs(meta.latencyMs), tok: `${meta.inputTokens} in`, cost: usd(meta.costUsd),
+      p1k: per1000(meta.costUsd * 1000), base: true },
+    ...results.map((r) => r.ok
+      ? { name: r.model, alone: verdictCell(r.alone.actual, r.alone.watermelon), rules: verdictCell(r.withRules.actual, r.withRules.watermelon),
+          esc: r.answers.escalate ? "yes" : "no", ms: fmtMs(r.latencyMs) + mult(r.latencyMs, meta.latencyMs),
+          tok: `${r.inputTokens} in / ${r.outputTokens} out`, cost: usd(r.costUsd), p1k: per1000(r.costPer1000) + mult(r.costUsd, meta.costUsd) }
+      : { name: r.model, failed: r.error === "busy" ? "busy, try again in a minute" : "unavailable" }),
+  ];
+
+  const table = el("table"); const head = el("tr");
+  head.append(el("th", null, ""));
+  for (const c of cols) head.append(Object.assign(el("th", c.jev ? "jev" : null, c.name), { scope: "col" }));
+  const thead = el("thead"); thead.append(head); table.append(thead);
+  const body = el("tbody");
+  const row = (label, note, get, cls) => {
+    const tr = el("tr", cls || null); const l = el("td", "row", label);
+    if (note) l.append(el("em", null, note));
+    tr.append(l);
+    for (const c of cols) {
+      const td = el("td", c.jev ? "jev" : null);
+      if (c.failed) td.textContent = label === "Verdict on its own" ? c.failed : "-";
+      else { const v2 = get(c); v2 instanceof Node ? td.append(v2) : (td.textContent = v2); }
+      tr.append(td);
+    }
+    body.append(tr);
+  };
+  row("Verdict on its own", "what it says the facts support", (c) => c.alone);
+  row("Verdict + same code rules", "code floors health when lateness is stated", (c) => c.rules);
+  row("Escalate", "Jev: probability; LLM: yes/no", (c) => c.esc);
+  row("Latency", "server-side, one call", (c) => c.ms, "sep");
+  row("Tokens", null, (c) => c.tok);
+  row("Cost, this update", null, (c) => c.cost);
+  row("Cost per 1,000 updates", null, (c) => c.p1k);
+  table.append(body);
+  const wrap = el("div", "cmptable"); wrap.append(table); out.append(wrap);
+
+  const note = el("p", "cmpnote");
+  const b = el("b", null, "Read this as one data point. ");
+  note.append(b, document.createTextNode(
+    "The LLMs get one untuned prompt at low reasoning effort. Across the 50 labelled updates in the README, with the same code rules " +
+    "applied to everyone, Jev caught 11 of 13 watermelons and each gpt-oss model 3 of 13. Prices are Groq's published on-demand rates."));
+  out.append(note);
+}
+
+$("cmpGo").onclick = async () => {
+  const btn = $("cmpGo"); btn.disabled = true; btn.textContent = "Asking gpt-oss…";
+  $("cmpOut").replaceChildren();
+  try {
+    const res = await fetch("/api/compare", { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ state: state.value.trim() }) });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || "Comparison failed.");
+    renderCompare(d.results);
+    btn.textContent = "Run again";
+  } catch (e) {
+    $("cmpOut").replaceChildren(el("div", "err", e.message));
+    btn.textContent = "Compare with gpt-oss";
+  } finally { btn.disabled = false; }
+};
 
 // ---- reviewer feedback ----
 let receipt = null, agree = null;
@@ -526,7 +638,11 @@ state.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key
 
 // Shareable deep link: /?sample=Vendor%20watermelon runs that sample on load.
 const q = new URLSearchParams(location.search).get("sample");
-if (q && SAMPLES[q]) { state.value = SAMPLES[q]; count(); run(); }
+if (q && SAMPLES[q]) {
+  state.value = SAMPLES[q]; count();
+  // &compare=1 also runs the model comparison. Only ever with the built-in synthetic samples.
+  run().then(() => { if (new URLSearchParams(location.search).has("compare") && !$("cmp").hidden) $("cmpGo").click(); });
+}
 </script>
 </body>
 </html>

@@ -118,3 +118,56 @@ test("mock mode: an honest green update is left alone, not sent to a human", asy
   assert.equal(d.verdict.watermelon, false);
   assert.equal(d.verdict.action, "no_action");
 });
+
+// --- live comparison arm ---
+import { compareModels, llmCost, LLM_MODELS } from "../src/llm.js";
+
+const groqReply = (content, usage = { prompt_tokens: 400, completion_tokens: 100 }) =>
+  async () => new Response(JSON.stringify({ choices: [{ message: { content } }], usage }), { status: 200 });
+
+test("comparison: parses a model's answer, prices it, and applies the same code rules", async () => {
+  const fetchOk = groqReply('{"health":"green","blocked":false,"slipped":false,"escalate":false,"risk":"none"}');
+  const [r] = await compareModels("Status: green. Vendor is 3 weeks behind.", "k", fetchOk, [LLM_MODELS[0]]);
+  assert.equal(r.ok, true);
+  assert.equal(r.alone.watermelon, false);       // the LLM alone accepted the "green" label...
+  assert.equal(r.withRules.watermelon, true);    // ...but the same code rules Jev gets raise it to red
+  assert.equal(r.withRules.actual, "red");
+  assert.ok(Math.abs(r.costUsd - llmCost(LLM_MODELS[0], { prompt_tokens: 400, completion_tokens: 100 })) < 1e-12);
+  assert.ok(r.costPer1000 > 0);
+});
+test("comparison: junk JSON degrades to 'unclear' instead of throwing", async () => {
+  const [r] = await compareModels("x", "k", groqReply("not json at all"), [LLM_MODELS[0]]);
+  assert.equal(r.ok, true);
+  assert.equal(r.answers.health, "unclear");
+});
+test("comparison: one model failing (429) does not sink the other", async () => {
+  let n = 0;
+  const flaky = async () => (n++ === 0
+    ? new Response("{}", { status: 429 })
+    : new Response(JSON.stringify({ choices: [{ message: { content: '{"health":"red"}' } }], usage: {} }), { status: 200 }));
+  const rs = await compareModels("x", "k", flaky);
+  assert.deepEqual(rs.map((r) => r.ok).sort(), [false, true]);
+  assert.equal(rs.find((r) => !r.ok).error, "busy");
+});
+test("/api/compare is off without a Groq key, and the compare flag follows the key", async () => {
+  const off = createApp({ env: { TYPESAFE_API_KEY: "k" }, jev: fakeJev });
+  assert.equal((await off.handle(post("/api/compare", { state: "x" }))).status, 503);
+  const on = createApp({ env: { TYPESAFE_API_KEY: "k", GROQ_API_KEY: "g" }, jev: fakeJev,
+    llmFetch: groqReply('{"health":"yellow","escalate":false}') });
+  const a = await (await on.handle(post("/api/assess", { state: "Status: green. Fine." }))).json();
+  assert.equal(a.compare, true);
+  const c = await (await on.handle(post("/api/compare", { state: "Status: green. Fine." }))).json();
+  assert.equal(c.results.length, 2);
+  assert.equal((await off.handle(post("/api/assess", { state: "Status: green. Fine." })).then((r) => r.json())).compare, false);
+});
+test("/api/compare rejects empty and oversized input", async () => {
+  const app = createApp({ env: { GROQ_API_KEY: "g" }, llmFetch: groqReply("{}") });
+  assert.equal((await app.handle(post("/api/compare", { state: "  " }))).status, 400);
+  assert.equal((await app.handle(post("/api/compare", { state: "x".repeat(5000) }))).status, 413);
+});
+test("compare is rate-limited per address", async () => {
+  const app = createApp({ env: { GROQ_API_KEY: "g" }, llmFetch: groqReply('{"health":"green"}') });
+  const codes = [];
+  for (let i = 0; i < 6; i++) codes.push((await app.handle(post("/api/compare", { state: "x" }, { "cf-connecting-ip": "1.2.3.4" }))).status);
+  assert.deepEqual(codes, [200, 200, 200, 200, 429, 429]);
+});

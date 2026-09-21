@@ -93,6 +93,12 @@ Labels were written from scenario facts *before* the text was rendered, never fr
 
 Six extra probes of Jev's documented weak spots (date arithmetic, double negative, prompt injection, numbers-only prose, terse red, good news in a bad tone) all came out right ([evals/failure-modes.json](evals/failure-modes.json)). Six probes is a smoke test, not a proof. Live deployment check (10 sequential requests): p50 175 ms, p95 276 ms, about $0.000028 per request.
 
+### Jev vs an LLM, live in the app
+
+After any result, **Compare with gpt-oss** runs the same update through Groq-hosted `gpt-oss-120b` and `gpt-oss-20b` and shows, next to Jev: what each says the facts support on its own, the verdict with the same code rules applied, escalation, latency, tokens, cost per update and cost per 1,000. Two rows are shown deliberately: on the sample vendor update the LLMs alone accept the "green" label and Jev does not, but once the same code rules are applied all three catch it. Showing only the first row would overstate Jev's edge.
+
+It is opt-in: the update text is sent to a third party (Groq) only when you click, and the button says so. It is off unless `GROQ_API_KEY` is set (locally or as a deploy secret) and is rate-limited to 4 requests a minute per address; Groq's free tier is about 8k tokens a minute across all visitors, so it may say "busy". The prompt and prices are shared with the eval script ([src/llm.js](src/llm.js)), so the live comparison and the published numbers cannot drift apart.
+
 ### Jev vs an LLM (same 50 updates)
 
 Same labelled updates, same six questions, one call each. LLMs are Groq-hosted `gpt-oss` models at temperature 0, JSON mode, low reasoning effort, one plain-language prompt ([evals/compare.mjs](evals/compare.mjs)). Latency is wall clock from a laptop; cost uses Groq's published prices.
@@ -140,13 +146,14 @@ The threshold above was tuned on updates I wrote and labelled myself, which is t
 |---|---|
 | `src/app.js` | The portable app: routes, rate limit, receipts, votes |
 | `src/jev.js`, `extract.js`, `verdict.js`, `questions.js` | Jev call, fact extraction, policy, the six questions |
+| `src/llm.js` | The opt-in comparison arm (Groq gpt-oss): shared prompt, prices, parallel calls |
 | `server.js`, `bin/watermelon.js` | Node host and CLI (zero dependencies) |
 | `src/worker.js`, `src/feedback.js`, `wrangler*.jsonc` | Cloudflare host (optional) |
 | `evals/` | Labelled sets, runner, held-out run, Jev-vs-LLM comparison, failure probes |
 | `docs/` | [PRD](docs/PRD.md), [threshold reasoning](docs/THRESHOLDS.md) |
-| `tests/` | 22 tests, no key or network needed (`npm test`) |
+| `tests/` | 29 tests, no key or network needed (`npm test`) |
 
-Reproduce the numbers: `npm run eval` and `npm run eval:holdout` (need a Jev key), `node evals/compare.mjs` (needs `GROQ_API_KEY`).
+Reproduce the numbers: `npm run eval` and `npm run eval:holdout` (need a Jev key), `node evals/compare.mjs` (needs `GROQ_API_KEY`). Set `GROQ_API_KEY` in `.env` too if you want the live comparison button in your own copy.
 
 ## Next
 

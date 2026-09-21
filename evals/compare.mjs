@@ -6,6 +6,7 @@ import { DATASET } from "./dataset.mjs";
 import { HOLDOUT } from "./holdout.mjs";
 import { extractFacts } from "../src/extract.js";
 import { verdict } from "../src/verdict.js";
+import { LLM_MODELS, PROMPT } from "../src/llm.js";
 
 const loadKey = (name) => {
   if (process.env[name]) return process.env[name];
@@ -15,22 +16,10 @@ const loadKey = (name) => {
 const key = loadKey("GROQ_API_KEY");
 if (!key) { console.error("No GROQ_API_KEY."); process.exit(1); }
 
-const MODELS = [
-  { id: "openai/gpt-oss-120b", inPer1M: 0.15, outPer1M: 0.60 },
-  { id: "openai/gpt-oss-20b", inPer1M: 0.075, outPer1M: 0.30 },
-];
+const MODELS = LLM_MODELS;
 const SET = [...DATASET, ...HOLDOUT];
 const TPM_BUDGET = 6500; // free tier is ~8k tokens/minute; leave headroom
 const RANK = { green: 0, yellow: 1, red: 2 };
-
-const PROMPT = `You judge weekly program status updates. Return ONLY a JSON object with these keys:
-"health": one of "green","yellow","red","unclear" (the health the FACTS support, whatever label the author claims; green=on track, yellow=some risk/slip but recoverable without help, red=off track/blocked/date will be missed, unclear=too little information),
-"blocked": true/false (blocked waiting on another team, vendor or decision),
-"slipped": true/false (a committed date or milestone has slipped or will slip),
-"escalate": true/false (needs executive or cross-org attention now),
-"risk": one of "schedule","scope","resourcing","technical","none".
-Update:
-`;
 
 async function ask(model, text) {
   const t0 = Date.now();
