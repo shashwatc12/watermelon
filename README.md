@@ -79,7 +79,7 @@ Watermelon asks Jev six typed questions in **one call** and compares the answer 
 
 ## Results (real Jev `jev-1.13.0`)
 
-Labels were written from scenario facts *before* the text was rendered, never from the wording. The 20-example held-out set was written after the policy was fixed and never used to tune it. Full method and tables: [evals/REPORT.md](evals/REPORT.md), [evals/REPORT.holdout.md](evals/REPORT.holdout.md).
+Labels were written from scenario facts *before* the text was rendered, never from the wording. The 20-example held-out set was written after the policy was fixed and never used to tune it. Full method and tables: [evals/REPORT.md](evals/REPORT.md), [evals/REPORT.holdout.md](evals/REPORT.holdout.md). Failure modes by class (inflation, contradicted, hedging…): [evals/FAILURES.md](evals/FAILURES.md). Tuning vs held-out threshold gap: [evals/GAP.md](evals/GAP.md).
 
 | Metric | Tuning set (30) | Held-out (20) |
 |---|---|---|
