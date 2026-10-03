@@ -1,5 +1,7 @@
 # 🍉 Watermelon
 
+> **What's a "watermelon"?** Program-management slang for a project reported as **green** (on track) whose facts are actually **red** (in trouble): green on the outside, red on the inside. Typical example: a status update marked "green" that also says the vendor is three weeks late.
+
 **Green on the outside, red on the inside.** Paste a weekly program status update. [Jev](https://madewithjev.com) (TypeSafe AI's System One model) reads the language, plain code reads the numbers, and Watermelon tells you whether the status label matches the facts and whether anyone needs to act.
 
 **[Live demo](https://watermelon.shashwatchavan.com)** · [Eval report](evals/REPORT.md) · [PRD](docs/PRD.md) · [Threshold reasoning](docs/THRESHOLDS.md)
