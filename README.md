@@ -1,5 +1,7 @@
 # 🍉 Watermelon
 
+> **What's a "watermelon"?** Program-management slang for a project reported as **green** (on track) whose facts are actually **red** (in trouble): green on the outside, red on the inside. Typical example: a status update marked "green" that also says the vendor is three weeks late.
+
 **Green on the outside, red on the inside.** Paste a weekly program status update. [Jev](https://madewithjev.com) (TypeSafe AI's System One model) reads the language, plain code reads the numbers, and Watermelon tells you whether the status label matches the facts and whether anyone needs to act.
 
 **[Live demo](https://watermelon.shashwatchavan.com)** · [Eval report](evals/REPORT.md) · [PRD](docs/PRD.md) · [Threshold reasoning](docs/THRESHOLDS.md)
@@ -79,7 +81,7 @@ Watermelon asks Jev six typed questions in **one call** and compares the answer 
 
 ## Results (real Jev `jev-1.13.0`)
 
-Labels were written from scenario facts *before* the text was rendered, never from the wording. The 20-example held-out set was written after the policy was fixed and never used to tune it. Full method and tables: [evals/REPORT.md](evals/REPORT.md), [evals/REPORT.holdout.md](evals/REPORT.holdout.md).
+Labels were written from scenario facts *before* the text was rendered, never from the wording. The 20-example held-out set was written after the policy was fixed and never used to tune it. Full method and tables: [evals/REPORT.md](evals/REPORT.md), [evals/REPORT.holdout.md](evals/REPORT.holdout.md). Failure modes by class (inflation, contradicted, hedging…): [evals/FAILURES.md](evals/FAILURES.md). Tuning vs held-out threshold gap: [evals/GAP.md](evals/GAP.md).
 
 | Metric | Tuning set (30) | Held-out (20) |
 |---|---|---|

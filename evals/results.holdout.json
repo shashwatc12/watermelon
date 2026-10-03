@@ -22,12 +22,118 @@
       }
     },
     "unclearRoutedToHuman": "0/1",
+    "unclearNamedByJev": "1/1",
+    "unclearEscalated": "1/1",
     "watermelon": {
       "caught": 4,
       "total": 5,
       "falseAlarms": 0,
-      "honestTotal": 14
+      "honestTotal": 14,
+      "precision": 1,
+      "recall": 0.8
     },
+    "escalationAtPolicy": {
+      "tp": 5,
+      "fp": 5,
+      "fn": 2,
+      "precision": 0.5,
+      "recall": 0.7142857142857143
+    },
+    "severity": {
+      "weights": {
+        "red": {
+          "red": 0,
+          "yellow": 2,
+          "green": 4,
+          "unclear": 1
+        },
+        "yellow": {
+          "red": 0.5,
+          "yellow": 0,
+          "green": 1,
+          "unclear": 0.5
+        },
+        "green": {
+          "red": 1,
+          "yellow": 0.5,
+          "green": 0,
+          "unclear": 0.5
+        },
+        "unclear": {
+          "red": 1,
+          "yellow": 1,
+          "green": 1,
+          "unclear": 0
+        }
+      },
+      "cost": 8.5,
+      "max": 44,
+      "rate": 0.19318181818181818,
+      "perUpdate": 0.425
+    },
+    "taxonomy": [
+      {
+        "tax": "contradicted",
+        "n": 4,
+        "healthOk": "2/4",
+        "unclearOk": "0/0",
+        "wmCaught": "3/4",
+        "escMissed": "1/3",
+        "falseEsc": "0/1",
+        "severity": 0.3076923076923077
+      },
+      {
+        "tax": "green",
+        "n": 4,
+        "healthOk": "4/4",
+        "unclearOk": "0/0",
+        "wmCaught": "0/0",
+        "escMissed": "0/0",
+        "falseEsc": "0/4",
+        "severity": 0
+      },
+      {
+        "tax": "hedging",
+        "n": 1,
+        "healthOk": "0/0",
+        "unclearOk": "1/1",
+        "wmCaught": "0/0",
+        "escMissed": "0/0",
+        "falseEsc": "1/1",
+        "severity": 0
+      },
+      {
+        "tax": "honest",
+        "n": 9,
+        "healthOk": "8/9",
+        "unclearOk": "0/0",
+        "wmCaught": "0/0",
+        "escMissed": "0/3",
+        "falseEsc": "4/6",
+        "severity": 0.09523809523809523
+      },
+      {
+        "tax": "inflation",
+        "n": 1,
+        "healthOk": "0/1",
+        "unclearOk": "0/0",
+        "wmCaught": "1/1",
+        "escMissed": "1/1",
+        "falseEsc": "0/0",
+        "severity": 0.5
+      },
+      {
+        "tax": "over-cautious",
+        "n": 1,
+        "healthOk": "0/1",
+        "unclearOk": "0/0",
+        "wmCaught": "0/0",
+        "escMissed": "0/0",
+        "falseEsc": "0/1",
+        "severity": 0.5
+      }
+    ],
+    "candidatesIncluded": null,
     "escalation": {
       "missCost": 10,
       "falseCost": 1,
@@ -185,6 +291,7 @@
   "rows": [
     {
       "id": "h1",
+      "tax": "green",
       "gold": {
         "health": "green",
         "escalate": false,
@@ -261,6 +368,7 @@
     },
     {
       "id": "h2",
+      "tax": "green",
       "gold": {
         "health": "green",
         "escalate": false,
@@ -337,6 +445,7 @@
     },
     {
       "id": "h3",
+      "tax": "green",
       "gold": {
         "health": "green",
         "escalate": false,
@@ -413,6 +522,7 @@
     },
     {
       "id": "h4",
+      "tax": "green",
       "gold": {
         "health": "green",
         "escalate": false,
@@ -489,6 +599,7 @@
     },
     {
       "id": "ho1",
+      "tax": "over-cautious",
       "gold": {
         "health": "green",
         "escalate": false,
@@ -565,6 +676,7 @@
     },
     {
       "id": "hr1",
+      "tax": "honest",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -641,6 +753,7 @@
     },
     {
       "id": "hr2",
+      "tax": "honest",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -717,6 +830,7 @@
     },
     {
       "id": "hr3",
+      "tax": "honest",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -793,6 +907,7 @@
     },
     {
       "id": "hr4",
+      "tax": "honest",
       "gold": {
         "health": "red",
         "escalate": false,
@@ -869,6 +984,7 @@
     },
     {
       "id": "hu1",
+      "tax": "hedging",
       "gold": {
         "health": "unclear",
         "escalate": false,
@@ -945,6 +1061,7 @@
     },
     {
       "id": "hw1",
+      "tax": "inflation",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -1021,6 +1138,7 @@
     },
     {
       "id": "hw2",
+      "tax": "contradicted",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -1097,6 +1215,7 @@
     },
     {
       "id": "hw3",
+      "tax": "contradicted",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -1173,6 +1292,7 @@
     },
     {
       "id": "hw4",
+      "tax": "contradicted",
       "gold": {
         "health": "red",
         "escalate": true,
@@ -1249,6 +1369,7 @@
     },
     {
       "id": "hw5",
+      "tax": "contradicted",
       "gold": {
         "health": "yellow",
         "escalate": false,
@@ -1325,6 +1446,7 @@
     },
     {
       "id": "hy1",
+      "tax": "honest",
       "gold": {
         "health": "yellow",
         "escalate": false,
@@ -1401,6 +1523,7 @@
     },
     {
       "id": "hy2",
+      "tax": "honest",
       "gold": {
         "health": "yellow",
         "escalate": false,
@@ -1477,6 +1600,7 @@
     },
     {
       "id": "hy3",
+      "tax": "honest",
       "gold": {
         "health": "yellow",
         "escalate": false,
@@ -1553,6 +1677,7 @@
     },
     {
       "id": "hy4",
+      "tax": "honest",
       "gold": {
         "health": "yellow",
         "escalate": false,
@@ -1629,6 +1754,7 @@
     },
     {
       "id": "hy5",
+      "tax": "honest",
       "gold": {
         "health": "yellow",
         "escalate": false,

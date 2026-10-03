@@ -8,6 +8,9 @@
     "eval": "node evals/run.mjs",
     "eval:holdout": "node evals/run.mjs --holdout",
     "eval:mock": "node evals/run.mjs --mock",
+    "eval:candidates": "node evals/run.mjs --candidates",
+    "eval:rescore": "node evals/run.mjs --rescore && node evals/run.mjs --rescore --holdout",
+    "eval:gap": "node evals/gap.mjs",
     "bench": "node scripts/bench.mjs",
     "dev:cf": "npx wrangler dev",
     "deploy:cf": "npx wrangler deploy"
