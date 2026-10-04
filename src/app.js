@@ -72,7 +72,11 @@ export function createApp({ env, store, jev = callJev, llmFetch = fetch, serveSt
 
     let out;
     try { out = await assessText(state, env, jev); }
-    catch (e) { return json({ error: `Jev returned ${e.status ?? "an error"}.` }, 502); }
+    catch (e) {
+      // A rejected key is the expected end state of this closed project, so say so plainly.
+      if (e.status === 401 || e.status === 403) return json({ error: "The live demo is paused: its Jev key is no longer active. The code still runs locally in mock mode (see the source link below)." }, 503);
+      return json({ error: `Jev returned ${e.status ?? "an error"}.` }, 502);
+    }
 
     // Signed so a later vote cannot misreport what Jev said. It carries no update text.
     const a = out.answers, v = out.verdict;

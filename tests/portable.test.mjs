@@ -71,10 +71,19 @@ test("owner endpoints need the bearer secret", async () => {
 });
 
 test("upstream failure is a generic 502 with no upstream body", async () => {
-  const boom = async () => { const e = new Error("Jev returned 401"); e.status = 401; throw e; };
+  const boom = async () => { const e = new Error("Jev returned 500"); e.status = 500; throw e; };
   const r = await createApp({ env: { TYPESAFE_API_KEY: "k" }, jev: boom }).handle(post("/api/assess", { state: "x" }));
   assert.equal(r.status, 502);
-  assert.deepEqual(await r.json(), { error: "Jev returned 401." });
+  assert.deepEqual(await r.json(), { error: "Jev returned 500." });
+});
+
+test("a rejected Jev key reads as a paused demo, not a bug", async () => {
+  for (const status of [401, 403]) {
+    const boom = async () => { const e = new Error(`Jev returned ${status}`); e.status = status; throw e; };
+    const r = await createApp({ env: { TYPESAFE_API_KEY: "k" }, jev: boom }).handle(post("/api/assess", { state: "x" }));
+    assert.equal(r.status, 503);
+    assert.match((await r.json()).error, /demo is paused/);
+  }
 });
 
 test("env loader: real env wins, then .env, then .dev.vars; unknown keys ignored", () => {

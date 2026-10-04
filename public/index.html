@@ -180,6 +180,19 @@
   .cmpnote b { color: var(--ink-2); font-weight: 600; }
   .err { color: var(--critical); margin-top: 16px; font-weight: 500; }
 
+  /* ---- closed-project banner ---- */
+  .closed { border-bottom: 1px solid var(--line); background: var(--rind); }
+  .closed .in { max-width: 880px; margin: 0 auto; padding: 12px 16px;
+    display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
+  .closed .tag { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--warning); border: 1px solid rgba(250,178,25,.4); background: rgba(250,178,25,.1);
+    border-radius: 99px; padding: 3px 9px; }
+  .closed p { margin: 0; flex: 1 1 320px; line-height: 1.5; }
+  .closed b { color: var(--ink); font-weight: 600; }
+  .closed a.cta { flex: none; color: var(--ink); font-weight: 600; text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 7px 12px; }
+  .closed a.cta:hover { border-color: #3a4a3c; }
+
   footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line);
     color: var(--muted); font-size: 13.5px; line-height: 1.6; }
   @media (max-width: 620px) {
@@ -199,6 +212,14 @@
 </style>
 </head>
 <body>
+<aside class="closed" aria-label="Project status">
+  <div class="in">
+    <span class="tag">Closed project</span>
+    <p><b>No further development.</b> Watermelon was a one-time build, finished in October 2026. The demo still
+      works while its Jev key lasts, and the code, evals and write-up stay open on GitHub.</p>
+    <a class="cta" id="contact" href="#" target="_blank" rel="noopener" hidden>Questions? Reach me on LinkedIn →</a>
+  </div>
+</aside>
 <main>
   <div class="mark"><h1>🍉 Watermelon</h1><span>status updates, checked</span></div>
 
@@ -332,8 +353,7 @@
 
   <footer>
     Code reads the numbers (the claimed label, “3 weeks late” → days); Jev reads the language. Escalation thresholds are
-    policy, set from a labelled eval, not model output. Your update is not stored unless you tick the box when leaving
-    feedback; votes are recorded without it. The optional model comparison sends your text to Groq, and only when you click it. Samples are synthetic — please don’t paste anything confidential. <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source, eval and method</a>.
+    policy, set from a labelled eval, not model output. Your update is not stored. The optional model comparison sends your text to Groq, and only when you click it. Samples are synthetic — please don’t paste anything confidential. <a href="https://github.com/shashwatc12/watermelon" target="_blank" rel="noopener">Source, eval and method</a>.
   </footer>
 </main>
 
@@ -459,7 +479,7 @@ function render(d) {
   $("cmpGo").textContent = "Compare with Qwen3.8-27B";
   receipt = d.receipt || null;
   agree = null;
-  $("fb").hidden = !receipt;
+  $("fb").hidden = true; // closed project: votes are no longer collected or read
   $("ask").replaceChildren(el("p", null, "Was this call right?"), $("yes"), $("no"));
   $("yes").setAttribute("aria-pressed", "false");
   $("no").setAttribute("aria-pressed", "false");
